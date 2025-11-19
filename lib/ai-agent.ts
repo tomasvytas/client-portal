@@ -1,9 +1,21 @@
 import OpenAI from 'openai'
 import { prisma } from './prisma'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
+let openaiInstance: OpenAI | null = null
+
+function getOpenAI(): OpenAI {
+  if (!openaiInstance) {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error('Missing credentials. Please set the OPENAI_API_KEY environment variable.')
+    }
+    openaiInstance = new OpenAI({
+      apiKey,
+    })
+  }
+  return openaiInstance
+}
 
 export interface TaskContext {
   taskId: string
@@ -175,7 +187,7 @@ Remember: Respond naturally in plain text (not JSON). Be helpful, professional, 
 
   let response: string
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
@@ -224,7 +236,7 @@ IMPORTANT for deadline:
 
 Only extract NEW information that wasn't already in the context. Return valid JSON only.`
 
-    const extractionCompletion = await openai.chat.completions.create({
+    const extractionCompletion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are a data extraction assistant. Return only valid JSON." },
