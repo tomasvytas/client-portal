@@ -91,9 +91,9 @@ export async function POST(
     // Get AI response
     const context = {
       taskId,
-      clientName: task.clientName,
-      clientEmail: task.clientEmail,
-      productName: task.productName,
+      clientName: task.clientName || undefined,
+      clientEmail: task.clientEmail || undefined,
+      productName: task.productName || undefined,
       productDescription: task.productDescription || undefined,
       deadline: task.deadline?.toISOString(),
       estimatedPrice: task.estimatedPrice ? Number(task.estimatedPrice) : undefined,
