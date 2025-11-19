@@ -19,7 +19,7 @@ export default function PricingManagement() {
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState<Partial<Pricing>>({
+  const [formData, setFormData] = useState<Partial<Pricing> & { description: string }>({
     name: '',
     category: 'general',
     basePrice: 0,
@@ -130,7 +130,7 @@ export default function PricingManagement() {
       basePrice: pricing.basePrice,
       minPrice: pricing.minPrice,
       maxPrice: pricing.maxPrice,
-      description: pricing.description || '',
+      description: pricing.description ?? '',
       isActive: pricing.isActive,
     })
   }
@@ -260,8 +260,8 @@ export default function PricingManagement() {
                 Description
               </label>
               <textarea
-                value={(formData.description ?? '') as string}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 placeholder="Optional description..."
