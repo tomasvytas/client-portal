@@ -95,45 +95,33 @@ export default function Dashboard() {
     }).format(price)
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="text-[#8E8E93] text-[17px] font-medium">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-semibold text-gray-900">Client Portal</h1>
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-[#000000]">
+      <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-[20px] font-semibold text-[#FFFFFF]">Client Portal</h1>
+            <div className="flex items-center gap-5">
               {isAdmin && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-[15px] text-[#007AFF] hover:text-[#0051D5] font-medium transition-colors"
                 >
                   Admin Panel
                 </button>
               )}
               <button
                 onClick={() => signOut()}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
               >
                 Sign Out
               </button>
@@ -142,81 +130,88 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Your Tasks</h2>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-[28px] font-bold text-[#FFFFFF] tracking-tight">Your Tasks</h2>
           <button
             onClick={createNewTask}
             disabled={creating}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
           >
             {creating ? 'Creating...' : '+ New Task Chat'}
           </button>
         </div>
 
         {tasks.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500 mb-4">You don't have any tasks yet.</p>
+          <div className="bg-[#1C1C1E] rounded-2xl p-16 text-center border border-[#38383A]/30">
+            <p className="text-[#8E8E93] text-[17px] mb-6">You don't have any tasks yet.</p>
             <button
               onClick={createNewTask}
               disabled={creating}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-6 py-3 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 transition-all duration-200 active:scale-95"
             >
               Create Your First Task
             </button>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {tasks.map((task) => (
               <div
                 key={task.id}
                 onClick={() => router.push(`/tasks/${task.id}`)}
-                className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+                className="bg-[#1C1C1E] rounded-2xl p-6 cursor-pointer hover:bg-[#2C2C2E] border border-[#38383A]/30 transition-all duration-200 active:scale-[0.98]"
+                style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-[17px] font-semibold text-[#FFFFFF] leading-tight flex-1 pr-2">
                     {task.productName || task.title || 'Untitled Task'}
                   </h3>
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(
-                      task.status
-                    )}`}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg uppercase tracking-wide ${
+                      task.status === 'completed'
+                        ? 'bg-[#30D158]/20 text-[#30D158]'
+                        : task.status === 'in_progress'
+                        ? 'bg-[#007AFF]/20 text-[#007AFF]'
+                        : task.status === 'cancelled'
+                        ? 'bg-[#FF3B30]/20 text-[#FF3B30]'
+                        : 'bg-[#8E8E93]/20 text-[#8E8E93]'
+                    }`}
                   >
-                    {task.status}
+                    {task.status.replace('_', ' ')}
                   </span>
                 </div>
 
                 {task.productName && task.title && task.title !== task.productName && (
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-[15px] text-[#8E8E93] mb-3">
                     {task.title}
                   </p>
                 )}
 
                 {task.clientName && (
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-[15px] text-[#8E8E93] mb-3">
                     Client: {task.clientName}
                   </p>
                 )}
 
-                <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-500">
+                <div className="flex justify-between items-center mt-5 pt-4 border-t border-[#38383A]/30">
+                  <div className="text-[13px] text-[#8E8E93]">
                     {task.messages.length > 0
                       ? `${task.messages.length} messages`
                       : 'No messages yet'}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-[13px] text-[#8E8E93]">
                     {formatDate(task.updatedAt)}
                   </div>
                 </div>
 
                 {task.estimatedPrice && (
-                  <div className="mt-2 text-sm font-medium text-blue-600">
+                  <div className="mt-3 text-[15px] font-semibold text-[#30D158]">
                     {formatPrice(task.estimatedPrice)}
                   </div>
                 )}
 
                 {task.assets.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-500">
+                  <div className="mt-2 text-[13px] text-[#8E8E93]">
                     {task.assets.length} asset{task.assets.length !== 1 ? 's' : ''}
                   </div>
                 )}

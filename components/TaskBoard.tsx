@@ -43,10 +43,10 @@ interface Task {
 }
 
 const columns = [
-  { id: 'draft', title: 'Draft', color: 'bg-gray-100' },
-  { id: 'in_progress', title: 'In Progress', color: 'bg-blue-100' },
-  { id: 'completed', title: 'Completed', color: 'bg-green-100' },
-  { id: 'cancelled', title: 'Cancelled', color: 'bg-red-100' },
+  { id: 'draft', title: 'Draft', color: 'bg-[#2C2C2E]' },
+  { id: 'in_progress', title: 'In Progress', color: 'bg-[#007AFF]/20' },
+  { id: 'completed', title: 'Completed', color: 'bg-[#30D158]/20' },
+  { id: 'cancelled', title: 'Cancelled', color: 'bg-[#FF3B30]/20' },
 ]
 
 function SortableTask({ task, onOpen }: { task: Task; onOpen: (task: Task) => void }) {
@@ -91,57 +91,57 @@ function SortableTask({ task, onOpen }: { task: Task; onOpen: (task: Task) => vo
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
       onClick={handleClick}
-      className="bg-white rounded-lg shadow p-4 mb-3 cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-[#1C1C1E] rounded-2xl p-4 mb-3 cursor-pointer hover:bg-[#2C2C2E] border border-[#38383A]/30 transition-all duration-200 active:scale-[0.98]"
     >
-      <div className="flex items-start gap-2 mb-2">
+      <div className="flex items-start gap-2.5 mb-3">
         <div
           {...attributes}
           {...listeners}
-          className="drag-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+          className="drag-handle cursor-grab active:cursor-grabbing text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
         >
           <GripVertical className="w-4 h-4" />
         </div>
-        <h4 className="font-semibold text-gray-900 flex-1">
+        <h4 className="font-semibold text-[#FFFFFF] text-[17px] flex-1 leading-tight">
           {task.productName || task.title || 'Untitled Task'}
         </h4>
       </div>
 
       {task.productName && task.title && task.title !== task.productName && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+        <div className="flex items-center gap-2 text-[15px] text-[#8E8E93] mb-2">
           <FileText className="w-4 h-4" />
           <span className="truncate">{task.title}</span>
         </div>
       )}
 
       {task.clientName && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+        <div className="flex items-center gap-2 text-[15px] text-[#8E8E93] mb-2">
           <User className="w-4 h-4" />
           <span>{task.clientName}</span>
         </div>
       )}
 
       {task.deadline && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+        <div className="flex items-center gap-2 text-[15px] text-[#8E8E93] mb-2">
           <Calendar className="w-4 h-4" />
           <span>{formatDate(task.deadline)}</span>
         </div>
       )}
 
       {task.estimatedPrice && (
-        <div className="flex items-center gap-2 text-sm font-medium text-blue-600 mb-2">
+        <div className="flex items-center gap-2 text-[15px] font-semibold text-[#30D158] mb-3">
           <DollarSign className="w-4 h-4" />
           <span>{formatPrice(task.estimatedPrice)}</span>
         </div>
       )}
 
-      <div className="flex justify-between items-center pt-2 border-t border-gray-200 text-xs text-gray-500">
+      <div className="flex justify-between items-center pt-3 border-t border-[#38383A]/30 text-[13px] text-[#8E8E93]">
         <span>{task._count.messages} messages</span>
         <span>{task._count.assets} assets</span>
       </div>
 
-      <div className="text-xs text-gray-400 mt-2">
+      <div className="text-[13px] text-[#8E8E93]/60 mt-2">
         {task.user.name || task.user.email}
       </div>
     </div>
@@ -280,7 +280,7 @@ export default function TaskBoard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-gray-600">Loading tasks...</div>
+        <div className="text-[#8E8E93] text-[17px] font-medium">Loading tasks...</div>
       </div>
     )
   }
@@ -292,7 +292,7 @@ export default function TaskBoard() {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {columns.map((column) => {
             const columnTasks = getTasksByStatus(column.id)
             return <Column key={column.id} column={column} tasks={columnTasks} onOpen={handleOpenTask} />
@@ -314,13 +314,13 @@ function Column({ column, tasks, onOpen }: { column: typeof columns[0]; tasks: T
 
   return (
     <div className="flex flex-col">
-      <div className={`${column.color} rounded-t-lg px-4 py-2`}>
-        <h3 className="font-semibold text-gray-900">{column.title}</h3>
-        <p className="text-sm text-gray-600">{tasks.length} tasks</p>
+      <div className={`${column.color} rounded-t-2xl px-5 py-3 border-b border-[#38383A]/30`}>
+        <h3 className="font-semibold text-[#FFFFFF] text-[17px]">{column.title}</h3>
+        <p className="text-[13px] text-[#8E8E93] mt-1">{tasks.length} tasks</p>
       </div>
       <div
         ref={setNodeRef}
-        className="flex-1 bg-gray-100 rounded-b-lg p-3 min-h-[500px]"
+        className="flex-1 bg-[#000000] rounded-b-2xl p-4 min-h-[500px]"
       >
         <SortableContext
           items={tasks.map((t) => t.id)}
@@ -381,36 +381,36 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
   const links = extractLinks()
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-[#1C1C1E] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[#38383A]/50" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center p-6 border-b border-[#38383A]/50">
+          <h2 className="text-[24px] font-bold text-[#FFFFFF]">
             {task.title || 'Untitled Task'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-all duration-200 active:scale-95"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-[#8E8E93]" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="text-center py-8 text-gray-600">Loading task details...</div>
+            <div className="text-center py-8 text-[#8E8E93] text-[17px]">Loading task details...</div>
           ) : (
             <div className="space-y-6">
               {/* Task Summary Section */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+              <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
+                <h3 className="text-[20px] font-semibold text-[#FFFFFF] mb-5 flex items-center gap-2.5">
+                  <FileText className="w-5 h-5 text-[#007AFF]" />
                   Task Summary
                 </h3>
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {/* Task Title */}
                   <div>
-                    <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Task</label>
-                    <p className="text-xl font-bold text-gray-900 mt-1">
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Task</label>
+                    <p className="text-[20px] font-bold text-[#FFFFFF] mt-1.5">
                       {task.title || 'Untitled Task'}
                     </p>
                   </div>
@@ -418,55 +418,55 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
                   {/* What Needs to be Done */}
                   {task.productName && (
                     <div>
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Product/Service</label>
-                      <p className="text-lg text-gray-900 mt-1 font-medium">{task.productName}</p>
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Product/Service</label>
+                      <p className="text-[17px] text-[#FFFFFF] mt-1.5 font-semibold">{task.productName}</p>
                     </div>
                   )}
 
                   {task.productDescription && (
                     <div>
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">What Needs to be Done</label>
-                      <p className="text-gray-900 mt-1 whitespace-pre-wrap leading-relaxed">{task.productDescription}</p>
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">What Needs to be Done</label>
+                      <p className="text-[#FFFFFF] mt-1.5 whitespace-pre-wrap leading-relaxed text-[15px]">{task.productDescription}</p>
                     </div>
                   )}
 
                   {/* Key Details Grid */}
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-blue-200">
+                  <div className="grid grid-cols-2 gap-5 pt-3 border-t border-[#007AFF]/30">
                     <div>
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Deadline</label>
-                      <p className="text-base font-semibold text-gray-900 mt-1 flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-500" />
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Deadline</label>
+                      <p className="text-[15px] font-semibold text-[#FFFFFF] mt-1.5 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-[#8E8E93]" />
                         {formatDate(task.deadline)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Budget</label>
-                      <div className="mt-1">
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Budget</label>
+                      <div className="mt-1.5">
                         {task.finalPrice ? (
-                          <p className="text-base font-semibold text-green-600 flex items-center gap-2">
+                          <p className="text-[15px] font-semibold text-[#30D158] flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
                             Final: {formatPrice(task.finalPrice)}
                           </p>
                         ) : task.estimatedPrice ? (
-                          <p className="text-base font-semibold text-blue-600 flex items-center gap-2">
+                          <p className="text-[15px] font-semibold text-[#007AFF] flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
                             Estimated: {formatPrice(task.estimatedPrice)}
                           </p>
                         ) : (
-                          <p className="text-base text-gray-500">Not set</p>
+                          <p className="text-[15px] text-[#8E8E93]">Not set</p>
                         )}
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Client</label>
-                      <p className="text-base text-gray-900 mt-1 flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Client</label>
+                      <p className="text-[15px] text-[#FFFFFF] mt-1.5 flex items-center gap-2">
+                        <User className="w-4 h-4 text-[#8E8E93]" />
                         {task.clientName || task.user.name || 'Not set'}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Status</label>
-                      <p className="text-base font-semibold text-gray-900 mt-1 capitalize">
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Status</label>
+                      <p className="text-[15px] font-semibold text-[#FFFFFF] mt-1.5 capitalize">
                         {task.status.replace('_', ' ')}
                       </p>
                     </div>
@@ -474,16 +474,16 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
 
                   {/* Links Summary */}
                   {links.length > 0 && (
-                    <div className="pt-2 border-t border-blue-200">
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Links</label>
-                      <div className="mt-2 space-y-1">
+                    <div className="pt-3 border-t border-[#007AFF]/30">
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Links</label>
+                      <div className="mt-2.5 space-y-2">
                         {links.map((link, index) => (
                           <a
                             key={index}
                             href={link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline break-all"
+                            className="flex items-center gap-2 text-[15px] text-[#007AFF] hover:text-[#0051D5] hover:underline break-all transition-colors"
                           >
                             <LinkIcon className="w-4 h-4 flex-shrink-0" />
                             <span className="truncate">{link}</span>
@@ -495,9 +495,9 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
 
                   {/* Assets Summary */}
                   {task.assets && task.assets.length > 0 && (
-                    <div className="pt-2 border-t border-blue-200">
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Assets</label>
-                      <p className="text-base text-gray-900 mt-1">
+                    <div className="pt-3 border-t border-[#007AFF]/30">
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Assets</label>
+                      <p className="text-[15px] text-[#FFFFFF] mt-1.5">
                         {task.assets.length} file{task.assets.length !== 1 ? 's' : ''} uploaded
                       </p>
                     </div>
@@ -505,9 +505,9 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
 
                   {/* Messages Summary */}
                   {task.messages && task.messages.length > 0 && (
-                    <div className="pt-2 border-t border-blue-200">
-                      <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Conversation</label>
-                      <p className="text-base text-gray-900 mt-1">
+                    <div className="pt-3 border-t border-[#007AFF]/30">
+                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Conversation</label>
+                      <p className="text-[15px] text-[#FFFFFF] mt-1.5">
                         {task.messages.length} message{task.messages.length !== 1 ? 's' : ''} exchanged
                       </p>
                     </div>
@@ -518,42 +518,42 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
               {/* Detailed Sections */}
               <div className="space-y-6">
                 {/* Client Contact */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Client Name</label>
-                    <p className="text-base text-gray-900">{task.clientName || task.user.name || 'Not set'}</p>
+                    <label className="text-[15px] font-semibold text-[#8E8E93]">Client Name</label>
+                    <p className="text-[17px] text-[#FFFFFF] mt-1">{task.clientName || task.user.name || 'Not set'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Email</label>
-                    <p className="text-base text-gray-900">{task.clientEmail || task.user.email || 'Not set'}</p>
+                    <label className="text-[15px] font-semibold text-[#8E8E93]">Email</label>
+                    <p className="text-[17px] text-[#FFFFFF] mt-1">{task.clientEmail || task.user.email || 'Not set'}</p>
                   </div>
                 </div>
 
                 {/* Messages */}
                 {task.messages && task.messages.length > 0 && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500 mb-2 block">
+                    <label className="text-[15px] font-semibold text-[#8E8E93] mb-3 block">
                       Conversation ({task.messages.length} messages)
                     </label>
-                    <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto space-y-3">
+                    <div className="bg-[#000000] rounded-2xl p-4 max-h-64 overflow-y-auto space-y-3 border border-[#38383A]/30">
                       {task.messages.map((message) => (
                         <div
                           key={message.id}
-                          className={`p-3 rounded-lg ${
+                          className={`p-3.5 rounded-2xl ${
                             message.role === 'user'
-                              ? 'bg-blue-100 text-blue-900 ml-4'
-                              : 'bg-white text-gray-900 mr-4'
+                              ? 'bg-[#007AFF] text-[#FFFFFF] ml-4'
+                              : 'bg-[#1C1C1E] text-[#FFFFFF] mr-4 border border-[#38383A]/30'
                           }`}
                         >
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="text-xs font-medium">
+                          <div className="flex justify-between items-start mb-1.5">
+                            <span className="text-[13px] font-semibold">
                               {message.role === 'user' ? 'Client' : 'AI Assistant'}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-[13px] text-[#8E8E93]">
                               {formatDate(message.createdAt)}
                             </span>
                           </div>
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-[15px] whitespace-pre-wrap leading-relaxed">{message.content}</p>
                         </div>
                       ))}
                     </div>
@@ -563,22 +563,22 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
                 {/* Assets */}
                 {task.assets && task.assets.length > 0 && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500 mb-2 block">
+                    <label className="text-[15px] font-semibold text-[#8E8E93] mb-3 block">
                       Uploaded Assets ({task.assets.length})
                     </label>
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {task.assets.map((asset) => (
                         <a
                           key={asset.id}
                           href={asset.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                          className="flex items-center gap-3 p-3.5 bg-[#1C1C1E] rounded-xl hover:bg-[#2C2C2E] transition-all duration-200 border border-[#38383A]/30"
                         >
-                          <Paperclip className="w-5 h-5 text-gray-400" />
+                          <Paperclip className="w-5 h-5 text-[#8E8E93]" />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{asset.originalName}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-[15px] font-semibold text-[#FFFFFF]">{asset.originalName}</p>
+                            <p className="text-[13px] text-[#8E8E93] mt-0.5">
                               {formatFileSize(asset.size)} • {formatDate(asset.createdAt)}
                             </p>
                           </div>
@@ -589,15 +589,15 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
                 )}
 
                 {/* Metadata */}
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="pt-5 border-t border-[#38383A]/30">
+                  <div className="grid grid-cols-2 gap-5 text-[15px]">
                     <div>
-                      <span className="text-gray-500">Created:</span>{' '}
-                      <span className="text-gray-900">{formatDate(task.createdAt)}</span>
+                      <span className="text-[#8E8E93]">Created:</span>{' '}
+                      <span className="text-[#FFFFFF]">{formatDate(task.createdAt)}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Last Updated:</span>{' '}
-                      <span className="text-gray-900">{formatDate(task.updatedAt)}</span>
+                      <span className="text-[#8E8E93]">Last Updated:</span>{' '}
+                      <span className="text-[#FFFFFF]">{formatDate(task.updatedAt)}</span>
                     </div>
                   </div>
                 </div>

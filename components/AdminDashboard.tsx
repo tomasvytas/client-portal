@@ -14,22 +14,22 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('board')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#000000]">
       {/* Header */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-semibold text-gray-900">Admin Panel</h1>
-            <div className="flex items-center gap-4">
+      <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-[20px] font-semibold text-[#FFFFFF]">Admin Panel</h1>
+            <div className="flex items-center gap-5">
               <button
                 onClick={() => router.push('/')}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
               >
                 Client Portal
               </button>
               <button
                 onClick={() => signOut()}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
               >
                 Sign Out
               </button>
@@ -39,16 +39,16 @@ export default function AdminDashboard() {
       </nav>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-[#1C1C1E] border-b border-[#38383A]/50">
+        <div className="max-w-7xl mx-auto px-6">
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('board')}
               className={`${
                 activeTab === 'board'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
             >
               <LayoutGrid className="w-5 h-5" />
               Task Board
@@ -57,9 +57,9 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('pricing')}
               className={`${
                 activeTab === 'pricing'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
             >
               <DollarSign className="w-5 h-5" />
               Pricing
@@ -68,9 +68,9 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('settings')}
               className={`${
                 activeTab === 'settings'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
             >
               <Settings className="w-5 h-5" />
               Settings
@@ -80,13 +80,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'board' && <TaskBoard />}
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'settings' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Settings</h2>
-            <p className="text-gray-600">Settings panel coming soon...</p>
+          <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
+            <h2 className="text-[20px] font-semibold mb-4 text-[#FFFFFF]">Settings</h2>
+            <p className="text-[#8E8E93] text-[15px]">Settings panel coming soon...</p>
           </div>
         )}
       </main>

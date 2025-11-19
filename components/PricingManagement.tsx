@@ -152,18 +152,18 @@ export default function PricingManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-gray-600">Loading pricings...</div>
+        <div className="text-[#8E8E93] text-[17px] font-medium">Loading pricings...</div>
       </div>
     )
   }
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Pricing Management</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-[28px] font-bold text-[#FFFFFF] tracking-tight">Pricing Management</h2>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2.5 px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] transition-all duration-200 active:scale-95"
         >
           <Plus className="w-5 h-5" />
           Add Pricing
@@ -172,29 +172,29 @@ export default function PricingManagement() {
 
       {/* Create Form */}
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Create New Pricing</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[#1C1C1E] rounded-2xl p-6 mb-6 border border-[#38383A]/30">
+          <h3 className="text-[20px] font-semibold mb-5 text-[#FFFFFF]">Create New Pricing</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Name
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] placeholder:text-[#8E8E93] transition-all"
                 placeholder="e.g., Video Production"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Category
               </label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] transition-all"
               >
                 <option value="video">Video</option>
                 <option value="design">Design</option>
@@ -204,59 +204,59 @@ export default function PricingManagement() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Base Price ($)
               </label>
               <input
                 type="number"
                 value={formData.basePrice}
                 onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] transition-all"
                 min="0"
                 step="0.01"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Min Price ($) - Optional
               </label>
               <input
                 type="number"
                 value={formData.minPrice || ''}
                 onChange={(e) => setFormData({ ...formData, minPrice: e.target.value ? parseFloat(e.target.value) : null })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] transition-all"
                 min="0"
                 step="0.01"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Max Price ($) - Optional
               </label>
               <input
                 type="number"
                 value={formData.maxPrice || ''}
                 onChange={(e) => setFormData({ ...formData, maxPrice: e.target.value ? parseFloat(e.target.value) : null })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] transition-all"
                 min="0"
                 step="0.01"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Active
               </label>
               <select
                 value={formData.isActive ? 'true' : 'false'}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] transition-all"
               >
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
                 Description
               </label>
               <textarea
@@ -265,23 +265,23 @@ export default function PricingManagement() {
                   const newFormData = { ...formData, description: e.target.value }
                   setFormData(newFormData)
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[#FFFFFF] placeholder:text-[#8E8E93] transition-all"
                 rows={3}
                 placeholder="Optional description..."
               />
             </div>
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-3 mt-6">
             <button
               onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2.5 px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] transition-all duration-200 active:scale-95"
             >
               <Save className="w-4 h-4" />
               Create
             </button>
             <button
               onClick={cancelEdit}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              className="flex items-center gap-2.5 px-5 py-2.5 bg-[#2C2C2E] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#38383A] transition-all duration-200 active:scale-95"
             >
               <X className="w-4 h-4" />
               Cancel
@@ -291,31 +291,31 @@ export default function PricingManagement() {
       )}
 
       {/* Pricing List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-[#1C1C1E] rounded-2xl overflow-hidden border border-[#38383A]/30">
+        <table className="min-w-full divide-y divide-[#38383A]/30">
+          <thead className="bg-[#2C2C2E]">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
                 Base Price
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
                 Price Range
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
                 Status
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-right text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-[#1C1C1E] divide-y divide-[#38383A]/30">
             {pricings.map((pricing) => (
               <tr key={pricing.id}>
                 {editingId === pricing.id ? (
@@ -325,14 +325,14 @@ export default function PricingManagement() {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={formData.category}
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                       >
                         <option value="video">Video</option>
                         <option value="design">Design</option>
@@ -346,26 +346,26 @@ export default function PricingManagement() {
                         type="number"
                         value={formData.basePrice}
                         onChange={(e) => setFormData({ ...formData, basePrice: parseFloat(e.target.value) || 0 })}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                         step="0.01"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex gap-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-[15px] text-[#8E8E93]">
+                      <div className="flex gap-2 items-center">
                         <input
                           type="number"
                           value={formData.minPrice || ''}
                           onChange={(e) => setFormData({ ...formData, minPrice: e.target.value ? parseFloat(e.target.value) : null })}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                          className="w-20 px-3 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                           placeholder="Min"
                           step="0.01"
                         />
-                        <span>-</span>
+                        <span className="text-[#8E8E93]">-</span>
                         <input
                           type="number"
                           value={formData.maxPrice || ''}
                           onChange={(e) => setFormData({ ...formData, maxPrice: e.target.value ? parseFloat(e.target.value) : null })}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                          className="w-20 px-3 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                           placeholder="Max"
                           step="0.01"
                         />
@@ -375,23 +375,23 @@ export default function PricingManagement() {
                       <select
                         value={formData.isActive ? 'true' : 'false'}
                         onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[15px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50"
                       >
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-[15px] font-semibold">
+                      <div className="flex justify-end gap-3">
                         <button
                           onClick={() => handleUpdate(pricing.id)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-[#007AFF] hover:text-[#0051D5] transition-colors p-2 hover:bg-[#2C2C2E] rounded-xl"
                         >
                           <Save className="w-4 h-4" />
                         </button>
                         <button
                           onClick={cancelEdit}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-[#8E8E93] hover:text-[#FFFFFF] transition-colors p-2 hover:bg-[#2C2C2E] rounded-xl"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -400,42 +400,42 @@ export default function PricingManagement() {
                   </>
                 ) : (
                   <>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-[15px] font-semibold text-[#FFFFFF]">
                       {pricing.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-[15px] text-[#8E8E93]">
                       {pricing.category}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-[15px] text-[#FFFFFF] font-semibold">
                       ${pricing.basePrice.toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-[15px] text-[#8E8E93]">
                       {pricing.minPrice || pricing.maxPrice
                         ? `$${pricing.minPrice?.toFixed(2) || '0'} - $${pricing.maxPrice?.toFixed(2) || '∞'}`
                         : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        className={`px-3 py-1 inline-flex text-[13px] leading-5 font-semibold rounded-lg ${
                           pricing.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-[#30D158]/20 text-[#30D158]'
+                            : 'bg-[#8E8E93]/20 text-[#8E8E93]'
                         }`}
                       >
                         {pricing.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-[15px] font-semibold">
+                      <div className="flex justify-end gap-3">
                         <button
                           onClick={() => startEdit(pricing)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-[#007AFF] hover:text-[#0051D5] transition-colors p-2 hover:bg-[#2C2C2E] rounded-xl"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(pricing.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-[#FF3B30] hover:text-[#FF2D20] transition-colors p-2 hover:bg-[#2C2C2E] rounded-xl"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -448,7 +448,7 @@ export default function PricingManagement() {
           </tbody>
         </table>
         {pricings.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-[#8E8E93] text-[17px]">
             No pricings found. Create your first pricing above.
           </div>
         )}
