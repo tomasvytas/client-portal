@@ -26,6 +26,12 @@ export default async function TaskPage({
     redirect('/')
   }
 
-  return <ChatInterface taskId={taskId} initialTask={task} />
+  // Convert Prisma task to ChatInterface Task format
+  const taskForInterface = {
+    ...task,
+    deadline: task.deadline ? task.deadline.toISOString() : null,
+  }
+
+  return <ChatInterface taskId={taskId} initialTask={taskForInterface} />
 }
 
