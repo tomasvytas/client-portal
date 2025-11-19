@@ -30,6 +30,7 @@ export default async function TaskPage({
   const taskForInterface = {
     ...task,
     deadline: task.deadline ? task.deadline.toISOString() : null,
+    estimatedPrice: task.estimatedPrice ? Number(task.estimatedPrice) : null,
   }
 
   return <ChatInterface taskId={taskId} initialTask={taskForInterface} />
