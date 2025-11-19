@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build && npm run db:migrate",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "env": {
+    "PRISMA_GENERATE_DATAPROXY": "false"
+  }
+}
+
