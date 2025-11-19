@@ -181,37 +181,37 @@ export default function ChatInterface({
 
   if (loadingMessages) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading chat...</div>
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="text-[#8E8E93] text-[17px] font-medium">Loading chat...</div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-[#000000]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="bg-[#1C1C1E] border-b border-[#38383A]/50 px-6 py-4 backdrop-blur-xl bg-opacity-80">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <button
               onClick={() => router.push('/')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2.5 hover:bg-[#2C2C2E] rounded-xl transition-all duration-200 active:scale-95"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-[#FFFFFF]" />
             </button>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">
+              <h1 className="text-[20px] font-semibold text-[#FFFFFF] leading-tight tracking-tight">
                 {initialTask.productName || initialTask.title || 'Task Chat'}
               </h1>
               {initialTask.productName && initialTask.title && initialTask.title !== initialTask.productName && (
-                <p className="text-sm text-gray-500">{initialTask.title}</p>
+                <p className="text-[15px] text-[#8E8E93] mt-0.5">{initialTask.title}</p>
               )}
             </div>
           </div>
           {initialTask.estimatedPrice && (
             <div className="text-right">
-              <div className="text-xs text-gray-500">Estimated Price</div>
-              <div className="text-lg font-semibold text-blue-600">
+              <div className="text-[13px] text-[#8E8E93] font-medium mb-1">Estimated Price</div>
+              <div className="text-[20px] font-semibold text-[#30D158]">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'USD',
@@ -223,12 +223,12 @@ export default function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto space-y-5">
           {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-2">Start a conversation</p>
-              <p className="text-sm text-gray-400">
+            <div className="text-center py-20">
+              <p className="text-[#FFFFFF] text-[17px] font-medium mb-2">Start a conversation</p>
+              <p className="text-[15px] text-[#8E8E93]">
                 Ask about your project, upload assets, or get a price estimate
               </p>
             </div>
@@ -241,20 +241,25 @@ export default function ChatInterface({
                 }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                  className={`max-w-[78%] rounded-2xl px-5 py-3.5 ${
                     message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-900 border border-gray-200'
+                      ? 'bg-[#007AFF] text-[#FFFFFF]'
+                      : 'bg-[#1C1C1E] text-[#FFFFFF] border border-[#38383A]/30'
                   }`}
+                  style={{
+                    boxShadow: message.role === 'user' 
+                      ? '0 2px 8px rgba(0, 122, 255, 0.2)' 
+                      : '0 2px 8px rgba(0, 0, 0, 0.3)'
+                  }}
                 >
-                  <p className="whitespace-pre-wrap break-words">
+                  <p className="whitespace-pre-wrap break-words text-[17px] leading-[1.47] font-normal">
                     {message.content}
                   </p>
                   <p
-                    className={`text-xs mt-1 ${
+                    className={`text-[13px] mt-2.5 ${
                       message.role === 'user'
-                        ? 'text-blue-100'
-                        : 'text-gray-500'
+                        ? 'text-[#FFFFFF]/60'
+                        : 'text-[#8E8E93]'
                     }`}
                   >
                     {formatTime(message.createdAt)}
@@ -265,11 +270,11 @@ export default function ChatInterface({
           )}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 rounded-lg px-4 py-2">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              <div className="bg-[#1C1C1E] border border-[#38383A]/30 rounded-2xl px-5 py-3.5">
+                <div className="flex gap-1.5">
+                  <div className="w-2 h-2 bg-[#8E8E93] rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-[#8E8E93] rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                  <div className="w-2 h-2 bg-[#8E8E93] rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
                 </div>
               </div>
             </div>
@@ -280,29 +285,29 @@ export default function ChatInterface({
 
       {/* File Upload Section */}
       {selectedFile && (
-        <div className="bg-white border-t border-gray-200 px-4 py-3">
+        <div className="bg-[#1C1C1E] border-t border-[#38383A]/50 px-6 py-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Paperclip className="w-5 h-5 text-gray-400" />
-              <span className="text-sm text-gray-700">{selectedFile.name}</span>
-              <span className="text-xs text-gray-500">
+            <div className="flex items-center gap-4">
+              <Paperclip className="w-5 h-5 text-[#8E8E93]" />
+              <span className="text-[15px] text-[#FFFFFF] font-medium">{selectedFile.name}</span>
+              <span className="text-[13px] text-[#8E8E93]">
                 ({(selectedFile.size / 1024).toFixed(1)} KB)
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
                   setSelectedFile(null)
                   if (fileInputRef.current) fileInputRef.current.value = ''
                 }}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-all duration-200"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-[#8E8E93]" />
               </button>
               <button
                 onClick={handleFileUpload}
                 disabled={uploading}
-                className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
               >
                 {uploading ? 'Uploading...' : 'Upload'}
               </button>
@@ -313,17 +318,17 @@ export default function ChatInterface({
 
       {/* Assets List */}
       {assets.length > 0 && (
-        <div className="bg-white border-t border-gray-200 px-4 py-2">
+        <div className="bg-[#1C1C1E] border-t border-[#38383A]/50 px-6 py-3">
           <div className="max-w-4xl mx-auto">
-            <div className="text-xs text-gray-500 mb-1">Uploaded Assets:</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="text-[13px] text-[#8E8E93] mb-2 font-medium">Uploaded Assets:</div>
+            <div className="flex flex-wrap gap-3">
               {assets.map((asset) => (
                 <a
                   key={asset.id}
                   href={asset.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-[13px] text-[#007AFF] hover:text-[#0051D5] font-medium transition-colors"
                 >
                   {asset.originalName}
                 </a>
@@ -334,9 +339,9 @@ export default function ChatInterface({
       )}
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-4">
+      <div className="bg-[#1C1C1E] border-t border-[#38383A]/50 px-6 py-5 backdrop-blur-xl bg-opacity-80">
         <form onSubmit={handleSend} className="max-w-4xl mx-auto">
-          <div className="flex gap-2">
+          <div className="flex gap-3 items-end">
             <input
               type="file"
               ref={fileInputRef}
@@ -346,22 +351,22 @@ export default function ChatInterface({
             />
             <label
               htmlFor="file-input"
-              className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+              className="p-3 hover:bg-[#2C2C2E] rounded-xl cursor-pointer transition-all duration-200 active:scale-95 flex-shrink-0"
             >
-              <Paperclip className="w-5 h-5 text-gray-600" />
+              <Paperclip className="w-5 h-5 text-[#FFFFFF]" />
             </label>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-5 py-3.5 bg-[#2C2C2E] border border-[#38383A] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[17px] text-[#FFFFFF] placeholder:text-[#8E8E93] font-normal transition-all duration-200 disabled:opacity-50"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-3.5 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
             >
               <Send className="w-5 h-5" />
             </button>
