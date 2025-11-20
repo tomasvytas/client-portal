@@ -205,7 +205,7 @@ export default function PricingManagement() {
             </div>
             <div>
               <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
-                Base Price ($)
+                Base Price (€)
               </label>
               <input
                 type="number"
@@ -218,7 +218,7 @@ export default function PricingManagement() {
             </div>
             <div>
               <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
-                Min Price ($) - Optional
+                Min Price (€) - Optional
               </label>
               <input
                 type="number"
@@ -231,7 +231,7 @@ export default function PricingManagement() {
             </div>
             <div>
               <label className="block text-[15px] font-semibold text-[#8E8E93] mb-2">
-                Max Price ($) - Optional
+                Max Price (€) - Optional
               </label>
               <input
                 type="number"
@@ -407,11 +407,14 @@ export default function PricingManagement() {
                       {pricing.category}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-[15px] text-[#FFFFFF] font-semibold">
-                      ${pricing.basePrice.toFixed(2)}
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'EUR',
+                      }).format(Number(pricing.basePrice))}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-[15px] text-[#8E8E93]">
                       {pricing.minPrice || pricing.maxPrice
-                        ? `$${pricing.minPrice?.toFixed(2) || '0'} - $${pricing.maxPrice?.toFixed(2) || '∞'}`
+                        ? `${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(Number(pricing.minPrice || 0))} - ${pricing.maxPrice ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(Number(pricing.maxPrice)) : '∞'}`
                         : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

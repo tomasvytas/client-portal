@@ -84,7 +84,7 @@ function SortableTask({ task, onOpen }: { task: Task; onOpen: (task: Task) => vo
     if (!price) return 'Not set'
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
     }).format(price)
   }
 
@@ -351,7 +351,7 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
     if (!price) return 'Not set'
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
     }).format(price)
   }
 

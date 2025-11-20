@@ -209,12 +209,12 @@ export default function ChatInterface({
             </div>
           </div>
           {initialTask.estimatedPrice && (
-            <div className="text-right">
+              <div className="text-right">
               <div className="text-[13px] text-[#8E8E93] font-medium mb-1">Estimated Price</div>
               <div className="text-[20px] font-semibold text-[#30D158]">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
-                  currency: 'USD',
+                  currency: 'EUR',
                 }).format(Number(initialTask.estimatedPrice))}
               </div>
             </div>

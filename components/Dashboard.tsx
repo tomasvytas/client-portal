@@ -91,7 +91,7 @@ export default function Dashboard() {
     if (!price) return 'Not set'
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'EUR',
     }).format(price)
   }
 

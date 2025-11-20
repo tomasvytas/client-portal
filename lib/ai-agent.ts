@@ -161,11 +161,11 @@ export async function getAIResponse(
    - Any other relevant details
 
 2. **Provide pricing estimates** when asked. Use these guidelines:
-   - Video production: $500-$5000 (simple videos start at $500, complex/cinematic can go up to $5000)
-   - Graphic design: $150-$2000 (simple designs $150-$300, brand identity $1000-$2000)
-   - Web development: $500-$10000 (landing pages $500-$1500, full websites $2000-$5000, e-commerce $5000+)
-   - Social media content: $100-$1000 (single posts $100-$200, campaigns $500-$1000)
-   - General creative work: $200-$3000 depending on complexity
+   - Video production: €500-€5000 (simple videos start at €500, complex/cinematic can go up to €5000)
+   - Graphic design: €150-€2000 (simple designs €150-€300, brand identity €1000-€2000)
+   - Web development: €500-€10000 (landing pages €500-€1500, full websites €2000-€5000, e-commerce €5000+)
+   - Social media content: €100-€1000 (single posts €100-€200, campaigns €500-€1000)
+   - General creative work: €200-€3000 depending on complexity
 
 3. **Be conversational and natural** - don't sound robotic. Ask one question at a time when gathering information.
 
@@ -179,7 +179,7 @@ Current information collected:
 - Description: ${context.productDescription || 'Not provided'}
 - Deadline: ${context.deadline || 'Not provided'}
 - Assets: ${hasAssets ? `${context.assets!.length} file(s) uploaded` : 'None'}
-- Estimated Price: ${context.estimatedPrice ? `$${context.estimatedPrice}` : 'Not set'}
+- Estimated Price: ${context.estimatedPrice ? `€${context.estimatedPrice}` : 'Not set'}
 
 ${missingInfo.length > 0 ? `Still need to collect: ${missingInfo.join(', ')}` : 'All basic information collected. You can ask for more details or provide pricing.'}
 
