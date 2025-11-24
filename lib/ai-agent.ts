@@ -183,7 +183,11 @@ Current information collected:
 
 ${missingInfo.length > 0 ? `Still need to collect: ${missingInfo.join(', ')}` : 'All basic information collected. You can ask for more details or provide pricing.'}
 
-Remember: Respond naturally in plain text (not JSON). Be helpful, professional, and guide the conversation to collect all necessary information.`
+Remember: 
+- Respond naturally in plain text (not JSON, not markdown)
+- Do NOT use markdown formatting like **bold**, *italic*, or any special characters for emphasis
+- Use plain text only - no asterisks, underscores, or other markdown symbols
+- Be helpful, professional, and guide the conversation to collect all necessary information.`
 
   let response: string
   try {
@@ -197,7 +201,18 @@ Remember: Respond naturally in plain text (not JSON). Be helpful, professional, 
       temperature: 0.8,
     })
 
-    response = completion.choices[0]?.message?.content || "I apologize, but I couldn't process that request."
+    let rawResponse = completion.choices[0]?.message?.content || "I apologize, but I couldn't process that request."
+    
+    // Remove markdown formatting (**, __, etc.)
+    response = rawResponse
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove **bold**
+      .replace(/\*(.*?)\*/g, '$1') // Remove *italic*
+      .replace(/__(.*?)__/g, '$1') // Remove __bold__
+      .replace(/_(.*?)_/g, '$1') // Remove _italic_
+      .replace(/~~(.*?)~~/g, '$1') // Remove ~~strikethrough~~
+      .replace(/`(.*?)`/g, '$1') // Remove `code`
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .trim()
   } catch (error: any) {
     console.error('OpenAI API error:', error)
     throw new Error(`OpenAI API error: ${error?.message || 'Unknown error'}`)

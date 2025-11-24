@@ -19,7 +19,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Calendar, DollarSign, User, FileText, GripVertical, X, Paperclip, Link as LinkIcon } from 'lucide-react'
+import { Calendar, DollarSign, User, FileText, GripVertical, X, Paperclip, Link as LinkIcon, Image as ImageIcon, Sparkles } from 'lucide-react'
 
 interface Task {
   id: string
@@ -164,6 +164,17 @@ interface TaskDetail extends Task {
     mimeType: string
     size: number
     createdAt: string
+    metadata?: {
+      extractedText?: string
+      description?: string
+      isMetaAd?: boolean
+      metaAdDetails?: {
+        content?: string
+        targetAudience?: string
+        keyMessaging?: string
+      }
+      otherDetails?: string
+    } | null
   }>
 }
 
@@ -335,7 +346,41 @@ function Column({ column, tasks, onOpen }: { column: typeof columns[0]; tasks: T
   )
 }
 
-function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose: () => void; loading: boolean }) {
+function TaskDetailModal({ task: initialTask, onClose, loading }: { task: TaskDetail; onClose: () => void; loading: boolean }) {
+  const [task, setTask] = useState<TaskDetail>(initialTask)
+  const [analyzingAsset, setAnalyzingAsset] = useState<string | null>(null)
+  const [assetAnalysis, setAssetAnalysis] = useState<Record<string, any>>({})
+
+  // Update task when initialTask changes
+  useEffect(() => {
+    setTask(initialTask)
+  }, [initialTask])
+
+  const handleAnalyzeImage = async (assetId: string) => {
+    setAnalyzingAsset(assetId)
+    try {
+      const res = await fetch(`/api/admin/assets/${assetId}/analyze`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (data.analysis && data.asset) {
+        setAssetAnalysis((prev) => ({ ...prev, [assetId]: data.analysis }))
+        // Update the asset in the task object
+        setTask((prevTask) => {
+          if (!prevTask.assets) return prevTask
+          const updatedAssets = prevTask.assets.map((a) =>
+            a.id === assetId ? { ...a, metadata: data.analysis } : a
+          )
+          return { ...prevTask, assets: updatedAssets }
+        })
+      }
+    } catch (error) {
+      console.error('Error analyzing image:', error)
+      alert('Failed to analyze image')
+    } finally {
+      setAnalyzingAsset(null)
+    }
+  }
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not set'
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -566,24 +611,142 @@ function TaskDetailModal({ task, onClose, loading }: { task: TaskDetail; onClose
                     <label className="text-[15px] font-semibold text-[#8E8E93] mb-3 block">
                       Uploaded Assets ({task.assets.length})
                     </label>
-                    <div className="space-y-2.5">
-                      {task.assets.map((asset) => (
-                        <a
-                          key={asset.id}
-                          href={asset.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 p-3.5 bg-[#1C1C1E] rounded-xl hover:bg-[#2C2C2E] transition-all duration-200 border border-[#38383A]/30"
-                        >
-                          <Paperclip className="w-5 h-5 text-[#8E8E93]" />
-                          <div className="flex-1">
-                            <p className="text-[15px] font-semibold text-[#FFFFFF]">{asset.originalName}</p>
-                            <p className="text-[13px] text-[#8E8E93] mt-0.5">
-                              {formatFileSize(asset.size)} • {formatDate(asset.createdAt)}
-                            </p>
+                    <div className="space-y-4">
+                      {task.assets.map((asset) => {
+                        const isImage = asset.mimeType.startsWith('image/')
+                        const analysis = asset.metadata || assetAnalysis[asset.id]
+                        const hasAnalysis = analysis && (analysis.extractedText || analysis.description)
+                        
+                        return (
+                          <div
+                            key={asset.id}
+                            className="bg-[#1C1C1E] rounded-xl border border-[#38383A]/30 overflow-hidden"
+                          >
+                            <div className="p-3.5">
+                              <div className="flex items-start gap-3">
+                                {isImage ? (
+                                  <ImageIcon className="w-5 h-5 text-[#8E8E93] mt-0.5 flex-shrink-0" />
+                                ) : (
+                                  <Paperclip className="w-5 h-5 text-[#8E8E93] mt-0.5 flex-shrink-0" />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                      <a
+                                        href={asset.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[15px] font-semibold text-[#FFFFFF] hover:text-[#007AFF] transition-colors block truncate"
+                                      >
+                                        {asset.originalName}
+                                      </a>
+                                      <p className="text-[13px] text-[#8E8E93] mt-0.5">
+                                        {formatFileSize(asset.size)} • {formatDate(asset.createdAt)}
+                                      </p>
+                                    </div>
+                                    {isImage && (
+                                      <button
+                                        onClick={() => handleAnalyzeImage(asset.id)}
+                                        disabled={analyzingAsset === asset.id}
+                                        className="px-3 py-1.5 text-[13px] font-semibold bg-[#007AFF] text-[#FFFFFF] rounded-lg hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-1.5 flex-shrink-0"
+                                      >
+                                        {analyzingAsset === asset.id ? (
+                                          <>
+                                            <div className="w-3 h-3 border-2 border-[#FFFFFF] border-t-transparent rounded-full animate-spin" />
+                                            Analyzing...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                            {hasAnalysis ? 'Re-analyze' : 'Analyze'}
+                                          </>
+                                        )}
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Image Preview */}
+                              {isImage && (
+                                <div className="mt-3 rounded-xl overflow-hidden border border-[#38383A]/30">
+                                  <img
+                                    src={asset.url}
+                                    alt={asset.originalName}
+                                    className="w-full max-h-64 object-contain bg-[#000000]"
+                                  />
+                                </div>
+                              )}
+                              
+                              {/* Analysis Results */}
+                              {hasAnalysis && (
+                                <div className="mt-3 pt-3 border-t border-[#38383A]/30 space-y-3">
+                                  {analysis.extractedText && (
+                                    <div>
+                                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1.5 block">
+                                        Extracted Text
+                                      </label>
+                                      <p className="text-[14px] text-[#FFFFFF] bg-[#000000] rounded-lg p-3 border border-[#38383A]/30 whitespace-pre-wrap">
+                                        {analysis.extractedText}
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {analysis.description && (
+                                    <div>
+                                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1.5 block">
+                                        Description
+                                      </label>
+                                      <p className="text-[14px] text-[#FFFFFF]">
+                                        {analysis.description}
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {analysis.isMetaAd && analysis.metaAdDetails && (
+                                    <div className="bg-[#007AFF]/10 border border-[#007AFF]/30 rounded-lg p-3">
+                                      <label className="text-[11px] font-semibold text-[#007AFF] uppercase tracking-wide mb-2 block">
+                                        Meta Ad Details
+                                      </label>
+                                      <div className="space-y-2 text-[14px]">
+                                        {analysis.metaAdDetails.content && (
+                                          <div>
+                                            <span className="text-[#8E8E93]">Content: </span>
+                                            <span className="text-[#FFFFFF]">{analysis.metaAdDetails.content}</span>
+                                          </div>
+                                        )}
+                                        {analysis.metaAdDetails.targetAudience && (
+                                          <div>
+                                            <span className="text-[#8E8E93]">Target Audience: </span>
+                                            <span className="text-[#FFFFFF]">{analysis.metaAdDetails.targetAudience}</span>
+                                          </div>
+                                        )}
+                                        {analysis.metaAdDetails.keyMessaging && (
+                                          <div>
+                                            <span className="text-[#8E8E93]">Key Messaging: </span>
+                                            <span className="text-[#FFFFFF]">{analysis.metaAdDetails.keyMessaging}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {analysis.otherDetails && (
+                                    <div>
+                                      <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1.5 block">
+                                        Other Details
+                                      </label>
+                                      <p className="text-[14px] text-[#FFFFFF]">
+                                        {analysis.otherDetails}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </a>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}

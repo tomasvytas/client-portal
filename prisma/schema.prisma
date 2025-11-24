@@ -98,6 +98,7 @@ model Asset {
   mimeType    String
   size        Int      // in bytes
   url         String   // Storage URL
+  metadata    Json?    // Store image analysis (OCR, description, etc.)
   createdAt   DateTime @default(now())
 }
 
