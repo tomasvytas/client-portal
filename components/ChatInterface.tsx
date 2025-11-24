@@ -116,11 +116,18 @@ export default function ChatInterface({
             if (uploadData.asset) {
               uploadedImageUrls.push(uploadData.asset.url)
               setAssets((prev) => [uploadData.asset, ...prev])
+            } else {
+              console.error('Upload response missing asset:', uploadData)
             }
+          } else {
+            const errorData = await uploadRes.json().catch(() => ({}))
+            console.error('Image upload failed:', uploadRes.status, errorData)
+            alert(`Failed to upload ${image.name}: ${errorData.error || 'Unknown error'}`)
           }
         }
       } catch (error) {
         console.error('Error uploading images:', error)
+        alert(`Error uploading images: ${error instanceof Error ? error.message : 'Unknown error'}`)
         // Continue with message even if image upload fails
       }
     }

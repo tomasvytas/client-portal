@@ -67,10 +67,11 @@ export async function POST(
     })
 
     return NextResponse.json({ asset })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading file:', error)
+    console.error('Error details:', error?.message, error?.stack)
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: error?.message || 'Failed to upload file', details: error?.stack },
       { status: 500 }
     )
   }
