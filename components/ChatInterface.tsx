@@ -45,6 +45,7 @@ export default function ChatInterface({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     fetchMessages()
@@ -81,12 +82,16 @@ export default function ChatInterface({
     }
   }
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     if (!input.trim() || loading) return
 
     const userMessage = input.trim()
     setInput('')
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
     setLoading(true)
 
     // Optimistically add user message
@@ -177,6 +182,22 @@ export default function ChatInterface({
       hour: 'numeric',
       minute: '2-digit',
     })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value)
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
+    }
   }
 
   if (loadingMessages) {
@@ -355,13 +376,16 @@ export default function ChatInterface({
             >
               <Paperclip className="w-5 h-5 text-[#FFFFFF]" />
             </label>
-            <input
-              type="text"
+            <textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 px-5 py-3.5 bg-[#2C2C2E] border border-[#38383A] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[17px] text-[#FFFFFF] placeholder:text-[#8E8E93] font-normal transition-all duration-200 disabled:opacity-50"
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message... (Shift+Enter for new line)"
+              rows={1}
+              className="flex-1 px-5 py-3.5 bg-[#2C2C2E] border border-[#38383A] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[17px] text-[#FFFFFF] placeholder:text-[#8E8E93] font-normal transition-all duration-200 disabled:opacity-50 resize-none overflow-hidden min-h-[52px] max-h-[200px] leading-[1.47]"
               disabled={loading}
+              style={{ height: 'auto' }}
             />
             <button
               type="submit"
