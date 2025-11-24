@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { requireAdmin } from '@/lib/admin'
 import { prisma } from '@/lib/prisma'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
@@ -23,19 +23,7 @@ export async function POST(
   { params }: { params: Promise<{ assetId: string }> }
 ) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    })
-
-    if (!user || !user.isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    await requireAdmin()
 
     const { assetId } = await params
     const asset = await prisma.asset.findUnique({
