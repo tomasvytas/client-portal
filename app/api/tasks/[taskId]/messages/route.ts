@@ -30,7 +30,13 @@ export async function GET(
       orderBy: { createdAt: 'asc' },
     })
 
-    return NextResponse.json({ messages })
+    // Extract image URLs from metadata
+    const messagesWithImages = messages.map(msg => ({
+      ...msg,
+      images: (msg.metadata as any)?.imageUrls || undefined,
+    }))
+
+    return NextResponse.json({ messages: messagesWithImages })
   } catch (error) {
     console.error('Error fetching messages:', error)
     return NextResponse.json(
@@ -70,21 +76,22 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { content } = body
+    const { content, imageUrls } = body
 
-    if (!content) {
+    if (!content && (!imageUrls || imageUrls.length === 0)) {
       return NextResponse.json(
-        { error: 'Message content is required' },
+        { error: 'Message content or images are required' },
         { status: 400 }
       )
     }
 
-    // Save user message
+    // Save user message with image URLs in metadata
     const userMessage = await prisma.message.create({
       data: {
         taskId,
         role: 'user',
-        content,
+        content: content || '(sent images)',
+        metadata: imageUrls && imageUrls.length > 0 ? { imageUrls } : undefined,
       },
     })
 
@@ -143,8 +150,14 @@ export async function POST(
       }
     }
 
+    // Include image URLs in response
+    const userMessageWithImages = {
+      ...userMessage,
+      images: imageUrls && imageUrls.length > 0 ? imageUrls : undefined,
+    }
+
     return NextResponse.json({
-      userMessage,
+      userMessage: userMessageWithImages,
       aiMessage,
     })
   } catch (error: any) {

@@ -9,6 +9,7 @@ interface Message {
   role: 'user' | 'assistant' | 'system'
   content: string
   createdAt: string
+  images?: string[] // URLs of images attached to this message
 }
 
 interface Task {
@@ -42,7 +43,7 @@ export default function ChatInterface({
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [assets, setAssets] = useState<Asset[]>([])
   const [uploading, setUploading] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedImages, setSelectedImages] = useState<File[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -64,6 +65,7 @@ export default function ChatInterface({
     try {
       const res = await fetch(`/api/tasks/${taskId}/messages`)
       const data = await res.json()
+      // Messages already have images extracted from metadata by the API
       setMessages(data.messages || [])
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -84,22 +86,52 @@ export default function ChatInterface({
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (!input.trim() || loading) return
+    if ((!input.trim() && selectedImages.length === 0) || loading) return
 
     const userMessage = input.trim()
+    const imagesToUpload = [...selectedImages]
     setInput('')
+    setSelectedImages([])
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
     setLoading(true)
 
-    // Optimistically add user message
+    // Upload images first if any
+    const uploadedImageUrls: string[] = []
+    if (imagesToUpload.length > 0) {
+      try {
+        for (const image of imagesToUpload) {
+          const formData = new FormData()
+          formData.append('file', image)
+          
+          const uploadRes = await fetch(`/api/tasks/${taskId}/assets`, {
+            method: 'POST',
+            body: formData,
+          })
+          
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json()
+            if (uploadData.asset) {
+              uploadedImageUrls.push(uploadData.asset.url)
+              setAssets((prev) => [uploadData.asset, ...prev])
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error uploading images:', error)
+        // Continue with message even if image upload fails
+      }
+    }
+
+    // Optimistically add user message with images
     const tempUserMessage: Message = {
       id: `temp-${Date.now()}`,
       role: 'user',
-      content: userMessage,
+      content: userMessage || '(sent images)',
       createdAt: new Date().toISOString(),
+      images: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
     }
     setMessages((prev) => [...prev, tempUserMessage])
 
@@ -107,7 +139,10 @@ export default function ChatInterface({
       const res = await fetch(`/api/tasks/${taskId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: userMessage }),
+        body: JSON.stringify({ 
+          content: userMessage || '(sent images)',
+          imageUrls: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
+        }),
       })
 
       if (!res.ok) {
@@ -138,43 +173,22 @@ export default function ChatInterface({
     }
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    if (imageFiles.length > 0) {
+      setSelectedImages((prev) => [...prev, ...imageFiles])
+    }
+    
+    // Reset input to allow selecting the same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
-  const handleFileUpload = async () => {
-    if (!selectedFile) return
-
-    setUploading(true)
-    const formData = new FormData()
-    formData.append('file', selectedFile)
-
-    try {
-      const res = await fetch(`/api/tasks/${taskId}/assets`, {
-        method: 'POST',
-        body: formData,
-      })
-
-      const data = await res.json()
-      if (data.asset) {
-        setAssets((prev) => [data.asset, ...prev])
-        setSelectedFile(null)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-        alert('File uploaded successfully!')
-      } else {
-        alert('Failed to upload file')
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error)
-      alert('Failed to upload file')
-    } finally {
-      setUploading(false)
-    }
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index))
   }
 
   const formatTime = (dateString: string) => {
@@ -273,9 +287,25 @@ export default function ChatInterface({
                       : '0 2px 8px rgba(0, 0, 0, 0.3)'
                   }}
                 >
-                  <p className="whitespace-pre-wrap break-words text-[17px] leading-[1.47] font-normal">
-                    {message.content}
-                  </p>
+                  {message.images && message.images.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {message.images.map((imageUrl, idx) => (
+                        <img
+                          key={idx}
+                          src={imageUrl}
+                          alt={`Attachment ${idx + 1}`}
+                          className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-[#38383A]/30"
+                          onClick={() => window.open(imageUrl, '_blank')}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {message.content && (
+                    <p className="whitespace-pre-wrap break-words text-[17px] leading-[1.47] font-normal">
+                      {message.content}
+                    </p>
+                  )}
                   <p
                     className={`text-[13px] mt-2.5 ${
                       message.role === 'user'
@@ -304,34 +334,32 @@ export default function ChatInterface({
         </div>
       </div>
 
-      {/* File Upload Section */}
-      {selectedFile && (
+      {/* Image Preview Section */}
+      {selectedImages.length > 0 && (
         <div className="bg-[#1C1C1E] border-t border-[#38383A]/50 px-6 py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 mb-3">
               <Paperclip className="w-5 h-5 text-[#8E8E93]" />
-              <span className="text-[15px] text-[#FFFFFF] font-medium">{selectedFile.name}</span>
-              <span className="text-[13px] text-[#8E8E93]">
-                ({(selectedFile.size / 1024).toFixed(1)} KB)
+              <span className="text-[15px] text-[#FFFFFF] font-medium">
+                {selectedImages.length} image{selectedImages.length > 1 ? 's' : ''} selected
               </span>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setSelectedFile(null)
-                  if (fileInputRef.current) fileInputRef.current.value = ''
-                }}
-                className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-all duration-200"
-              >
-                <X className="w-4 h-4 text-[#8E8E93]" />
-              </button>
-              <button
-                onClick={handleFileUpload}
-                disabled={uploading}
-                className="px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
-              >
-                {uploading ? 'Uploading...' : 'Upload'}
-              </button>
+            <div className="flex flex-wrap gap-3">
+              {selectedImages.map((image, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt={`Preview ${index + 1}`}
+                    className="w-20 h-20 object-cover rounded-xl border border-[#38383A]/30"
+                  />
+                  <button
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-2 -right-2 p-1 bg-[#FF3B30] text-[#FFFFFF] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -366,13 +394,16 @@ export default function ChatInterface({
             <input
               type="file"
               ref={fileInputRef}
-              onChange={handleFileSelect}
+              onChange={handleImageSelect}
+              accept="image/*"
+              multiple
               className="hidden"
-              id="file-input"
+              id="image-input"
             />
             <label
-              htmlFor="file-input"
+              htmlFor="image-input"
               className="p-3 hover:bg-[#2C2C2E] rounded-xl cursor-pointer transition-all duration-200 active:scale-95 flex-shrink-0"
+              title="Upload images"
             >
               <Paperclip className="w-5 h-5 text-[#FFFFFF]" />
             </label>
@@ -389,7 +420,7 @@ export default function ChatInterface({
             />
             <button
               type="submit"
-              disabled={loading || !input.trim()}
+              disabled={loading || (!input.trim() && selectedImages.length === 0)}
               className="p-3.5 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-shrink-0"
             >
               <Send className="w-5 h-5" />
