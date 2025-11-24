@@ -19,6 +19,7 @@
     "@google-cloud/storage": "^7.17.3",
     "@prisma/client": "^6.19.0",
     "@types/multer": "^2.0.0",
+    "@vercel/blob": "^1.1.1",
     "lucide-react": "^0.554.0",
     "multer": "^2.0.2",
     "next": "16.0.3",

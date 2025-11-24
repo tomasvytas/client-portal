@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import OpenAI from 'openai'
+import { get } from '@vercel/blob'
 
 let openaiInstance: OpenAI | null = null
 
@@ -56,8 +57,16 @@ export async function POST(
     }
 
     // Read the image file
-    const filePath = join(process.cwd(), 'uploads', asset.taskId, asset.filename)
-    const imageBuffer = await readFile(filePath)
+    let imageBuffer: Buffer
+    if (asset.url.startsWith('http://') || asset.url.startsWith('https://')) {
+      // Vercel Blob URL - fetch it
+      const blob = await get(asset.url)
+      imageBuffer = Buffer.from(await blob.arrayBuffer())
+    } else {
+      // Local filesystem (development)
+      const filePath = join(process.cwd(), 'uploads', asset.taskId, asset.filename)
+      imageBuffer = await readFile(filePath)
+    }
     const base64Image = imageBuffer.toString('base64')
 
     // Analyze image with OpenAI Vision API

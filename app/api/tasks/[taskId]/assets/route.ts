@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { put } from '@vercel/blob'
 
 export async function POST(
   request: NextRequest,
@@ -37,22 +38,30 @@ export async function POST(
       )
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'uploads', taskId)
-    await mkdir(uploadsDir, { recursive: true })
-
     // Generate unique filename
     const fileExtension = file.name.split('.').pop()
     const uniqueFilename = `${randomUUID()}.${fileExtension}`
-    const filePath = join(uploadsDir, uniqueFilename)
-
-    // Save file
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
-
-    // Create public URL (in production, use cloud storage)
-    const url = `/api/files/${taskId}/${uniqueFilename}`
+    
+    // Use Vercel Blob in production, local filesystem in development
+    let url: string
+    if (process.env.VERCEL || process.env.BLOB_READ_WRITE_TOKEN) {
+      // Production: Use Vercel Blob
+      const bytes = await file.arrayBuffer()
+      const blob = await put(`${taskId}/${uniqueFilename}`, bytes, {
+        access: 'public',
+        contentType: file.type,
+      })
+      url = blob.url
+    } else {
+      // Development: Use local filesystem
+      const uploadsDir = join(process.cwd(), 'uploads', taskId)
+      await mkdir(uploadsDir, { recursive: true })
+      const filePath = join(uploadsDir, uniqueFilename)
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      await writeFile(filePath, buffer)
+      url = `/api/files/${taskId}/${uniqueFilename}`
+    }
 
     // Save to database
     const asset = await prisma.asset.create({

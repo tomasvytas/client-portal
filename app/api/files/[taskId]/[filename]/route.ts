@@ -40,7 +40,12 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
 
-    // Read file from uploads directory
+    // If URL is a full URL (Vercel Blob), redirect to it
+    if (asset.url.startsWith('http://') || asset.url.startsWith('https://')) {
+      return NextResponse.redirect(asset.url)
+    }
+    
+    // Otherwise, read from local filesystem (development only)
     const filePath = join(process.cwd(), 'uploads', taskId, filename)
     
     try {
