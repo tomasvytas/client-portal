@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
-import { put } from '@vercel/blob'
+import { v2 as cloudinary } from 'cloudinary'
 
 export async function POST(
   request: NextRequest,
@@ -42,16 +42,28 @@ export async function POST(
     const fileExtension = file.name.split('.').pop()
     const uniqueFilename = `${randomUUID()}.${fileExtension}`
     
-    // Use Vercel Blob in production, local filesystem in development
+    // Use Cloudinary in production, local filesystem in development
     let url: string
-    if (process.env.VERCEL || process.env.BLOB_READ_WRITE_TOKEN) {
-      // Production: Use Vercel Blob
-      const bytes = await file.arrayBuffer()
-      const blob = await put(`${taskId}/${uniqueFilename}`, bytes, {
-        access: 'public',
-        contentType: file.type,
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      // Production: Use Cloudinary
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
       })
-      url = blob.url
+      
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      const base64 = buffer.toString('base64')
+      const dataUri = `data:${file.type};base64,${base64}`
+      
+      const result = await cloudinary.uploader.upload(dataUri, {
+        folder: `client-portal/${taskId}`,
+        public_id: uniqueFilename.replace(`.${fileExtension}`, ''),
+        resource_type: 'auto',
+      })
+      
+      url = result.secure_url
     } else {
       // Development: Use local filesystem
       const uploadsDir = join(process.cwd(), 'uploads', taskId)

@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import OpenAI from 'openai'
-import { get } from '@vercel/blob'
 
 let openaiInstance: OpenAI | null = null
 
@@ -59,9 +58,13 @@ export async function POST(
     // Read the image file
     let imageBuffer: Buffer
     if (asset.url.startsWith('http://') || asset.url.startsWith('https://')) {
-      // Vercel Blob URL - fetch it
-      const blob = await get(asset.url)
-      imageBuffer = Buffer.from(await blob.arrayBuffer())
+      // Cloudinary or external URL - fetch it
+      const response = await fetch(asset.url)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`)
+      }
+      const arrayBuffer = await response.arrayBuffer()
+      imageBuffer = Buffer.from(arrayBuffer)
     } else {
       // Local filesystem (development)
       const filePath = join(process.cwd(), 'uploads', asset.taskId, asset.filename)
