@@ -148,9 +148,9 @@ export async function getFileShareableLink(fileId: string): Promise<string> {
 /**
  * Setup folder structure for a task: Task Name > Assets
  * @param taskName - Name of the task
- * @returns Assets folder ID
+ * @returns Object with taskFolderId and assetsFolderId
  */
-export async function setupTaskFolders(taskName: string): Promise<string> {
+export async function setupTaskFolders(taskName: string): Promise<{ taskFolderId: string; assetsFolderId: string }> {
   // Get the base folder ID from environment (shared folder with service account)
   const baseFolderId = process.env.GOOGLE_DRIVE_BASE_FOLDER_ID
   
@@ -164,6 +164,51 @@ export async function setupTaskFolders(taskName: string): Promise<string> {
   // Create or find Assets folder inside task folder
   const assetsFolderId = await findOrCreateFolder('Assets', taskFolderId)
   
-  return assetsFolderId
+  return { taskFolderId, assetsFolderId }
+}
+
+/**
+ * Upload a text document to Google Drive
+ * @param content - Text content of the document
+ * @param fileName - Name of the document
+ * @param folderId - Parent folder ID
+ * @returns Object with fileId and webViewLink
+ */
+export async function uploadTextDocumentToDrive(
+  content: string,
+  fileName: string,
+  folderId: string
+): Promise<{ fileId: string; webViewLink: string }> {
+  const drive = getDrive()
+
+  // Convert text to buffer
+  const buffer = Buffer.from(content, 'utf-8')
+  const { Readable } = await import('stream')
+  const stream = Readable.from(buffer)
+
+  const fileMetadata = {
+    name: fileName,
+    parents: [folderId],
+    mimeType: 'text/plain',
+  }
+
+  const media = {
+    mimeType: 'text/plain',
+    body: stream,
+  }
+
+  const file = await drive.files.create({
+    requestBody: fileMetadata,
+    media,
+    fields: 'id, webViewLink',
+  })
+
+  // Make file shareable
+  await getFileShareableLink(file.data.id!)
+
+  return {
+    fileId: file.data.id!,
+    webViewLink: file.data.webViewLink || `https://drive.google.com/file/d/${file.data.id!}/view`,
+  }
 }
 

@@ -6,6 +6,7 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { v2 as cloudinary } from 'cloudinary'
 import { setupTaskFolders, uploadFileToDrive, getFileShareableLink } from '@/lib/google-drive'
+import { generateTaskBrief } from '@/lib/task-brief'
 
 export async function POST(
   request: NextRequest,
@@ -55,7 +56,7 @@ export async function POST(
       try {
         // Setup folder structure: Task Name > Assets
         const taskName = task.title || task.productName || `Task ${taskId}`
-        const assetsFolderId = await setupTaskFolders(taskName)
+        const { assetsFolderId } = await setupTaskFolders(taskName)
         
         // Upload file to Google Drive
         const driveResult = await uploadFileToDrive(
@@ -130,6 +131,11 @@ export async function POST(
         url,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       },
+    })
+
+    // Regenerate brief document with new asset (async, don't wait)
+    generateTaskBrief(taskId).catch(err => {
+      console.error('Failed to regenerate task brief:', err)
     })
 
     return NextResponse.json({ asset })

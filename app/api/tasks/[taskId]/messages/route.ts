@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getAIResponse } from '@/lib/ai-agent'
+import { generateTaskBrief } from '@/lib/task-brief'
 
 export async function GET(
   request: NextRequest,
@@ -146,6 +147,11 @@ export async function POST(
         await prisma.task.update({
           where: { id: taskId },
           data: updateData,
+        })
+        
+        // Generate and upload brief document to Google Drive (async, don't wait)
+        generateTaskBrief(taskId).catch(err => {
+          console.error('Failed to generate task brief:', err)
         })
       }
     }
