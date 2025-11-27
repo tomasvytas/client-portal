@@ -47,7 +47,7 @@ export async function POST(
     const buffer = Buffer.from(bytes)
     
     // Priority: Google Drive > Cloudinary > Local filesystem
-    let url: string
+    let url: string | undefined = undefined
     let metadata: any = {}
     
     if (process.env.GOOGLE_DRIVE_CREDENTIALS) {
