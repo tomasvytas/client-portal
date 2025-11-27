@@ -1,31 +1,57 @@
 import { google } from 'googleapis'
+import { OAuth2Client } from 'google-auth-library'
 
-// Lazy initialization for Google Drive
+// Lazy initialization for Google Drive OAuth client
 let driveInstance: ReturnType<typeof google.drive> | null = null
 
 function getDrive() {
   if (!driveInstance) {
+    // Try OAuth first (preferred method)
+    const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID
+    const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET
+    const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+
+    if (clientId && clientSecret && refreshToken) {
+      // Use OAuth2 with refresh token
+      const auth = new OAuth2Client(
+        clientId,
+        clientSecret,
+        process.env.NEXTAUTH_URL ? `${process.env.NEXTAUTH_URL}/api/admin/drive/callback` : 'http://localhost:3000/api/admin/drive/callback'
+      )
+
+      auth.setCredentials({
+        refresh_token: refreshToken,
+      })
+
+      driveInstance = google.drive({ version: 'v3', auth })
+      console.log('Using OAuth2 authentication for Google Drive')
+      return driveInstance
+    }
+
+    // Fallback to service account (for backward compatibility)
     const credentials = process.env.GOOGLE_DRIVE_CREDENTIALS
-    if (!credentials) {
-      throw new Error('Missing GOOGLE_DRIVE_CREDENTIALS environment variable')
+    if (credentials) {
+      let credentialsJson
+      try {
+        credentialsJson = JSON.parse(credentials)
+      } catch (e) {
+        throw new Error('GOOGLE_DRIVE_CREDENTIALS must be valid JSON')
+      }
+
+      const auth = new google.auth.GoogleAuth({
+        credentials: credentialsJson,
+        scopes: [
+          'https://www.googleapis.com/auth/drive.file',
+          'https://www.googleapis.com/auth/drive',
+        ],
+      })
+
+      driveInstance = google.drive({ version: 'v3', auth })
+      console.log('Using service account authentication for Google Drive (fallback)')
+      return driveInstance
     }
 
-    let credentialsJson
-    try {
-      credentialsJson = JSON.parse(credentials)
-    } catch (e) {
-      throw new Error('GOOGLE_DRIVE_CREDENTIALS must be valid JSON')
-    }
-
-    const auth = new google.auth.GoogleAuth({
-      credentials: credentialsJson,
-      scopes: [
-        'https://www.googleapis.com/auth/drive.file',
-        'https://www.googleapis.com/auth/drive',
-      ],
-    })
-
-    driveInstance = google.drive({ version: 'v3', auth })
+    throw new Error('Missing Google Drive credentials. Please set either GOOGLE_DRIVE_CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN or GOOGLE_DRIVE_CREDENTIALS')
   }
   return driveInstance
 }

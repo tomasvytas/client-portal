@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Settings, LayoutGrid, DollarSign } from 'lucide-react'
+import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy } from 'lucide-react'
 import PricingManagement from './PricingManagement'
 import TaskBoard from './TaskBoard'
 
@@ -11,7 +11,53 @@ type Tab = 'board' | 'pricing' | 'settings'
 
 export default function AdminDashboard() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<Tab>('board')
+  const [driveAuthUrl, setDriveAuthUrl] = useState<string | null>(null)
+  const [refreshToken, setRefreshToken] = useState<string | null>(null)
+  const [driveAuthError, setDriveAuthError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  // Check for auth callback results
+  useEffect(() => {
+    const success = searchParams?.get('drive_auth_success')
+    const token = searchParams?.get('refresh_token')
+    const error = searchParams?.get('drive_auth_error')
+
+    if (success === '1' && token) {
+      setRefreshToken(token)
+      setDriveAuthError(null)
+      // Clean URL
+      router.replace('/admin?tab=settings')
+    } else if (error) {
+      setDriveAuthError(error)
+      router.replace('/admin?tab=settings')
+    }
+  }, [searchParams, router])
+
+  // Fetch auth URL when settings tab is opened
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      fetch('/api/admin/drive/auth')
+        .then(res => res.json())
+        .then(data => {
+          if (data.authUrl) {
+            setDriveAuthUrl(data.authUrl)
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching auth URL:', err)
+        })
+    }
+  }, [activeTab])
+
+  const handleCopyToken = () => {
+    if (refreshToken) {
+      navigator.clipboard.writeText(refreshToken)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#000000]">
@@ -85,8 +131,67 @@ export default function AdminDashboard() {
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'settings' && (
           <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
-            <h2 className="text-[20px] font-semibold mb-4 text-[#FFFFFF]">Settings</h2>
-            <p className="text-[#8E8E93] text-[15px]">Settings panel coming soon...</p>
+            <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>
+            
+            {/* Google Drive OAuth Setup */}
+            <div className="mb-8">
+              <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Google Drive Integration</h3>
+              
+              {driveAuthError && (
+                <div className="mb-4 p-4 bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-xl flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-[#FF3B30] flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-[15px] font-semibold text-[#FF3B30] mb-1">Authorization Error</p>
+                    <p className="text-[14px] text-[#8E8E93]">{driveAuthError}</p>
+                  </div>
+                </div>
+              )}
+
+              {refreshToken ? (
+                <div className="p-4 bg-[#34C759]/10 border border-[#34C759]/30 rounded-xl">
+                  <div className="flex items-start gap-3 mb-4">
+                    <CheckCircle className="w-5 h-5 text-[#34C759] flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-[15px] font-semibold text-[#34C759] mb-2">Authorization Successful!</p>
+                      <p className="text-[14px] text-[#8E8E93] mb-3">
+                        Copy the refresh token below and add it to your Vercel environment variables as <code className="bg-[#000000] px-1.5 py-0.5 rounded text-[#007AFF]">GOOGLE_DRIVE_REFRESH_TOKEN</code>
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={refreshToken}
+                          className="flex-1 px-3 py-2 bg-[#000000] border border-[#38383A] rounded-lg text-[#FFFFFF] text-[13px] font-mono"
+                        />
+                        <button
+                          onClick={handleCopyToken}
+                          className="px-4 py-2 bg-[#007AFF] text-[#FFFFFF] rounded-lg hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                        >
+                          <Copy className="w-4 h-4" />
+                          {copied ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-[14px] text-[#8E8E93] mb-4">
+                    Authorize Google Drive access to enable file uploads. You'll need to add the refresh token to your Vercel environment variables.
+                  </p>
+                  {driveAuthUrl ? (
+                    <a
+                      href={driveAuthUrl}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[15px] font-semibold"
+                    >
+                      Authorize Google Drive
+                    </a>
+                  ) : (
+                    <p className="text-[14px] text-[#8E8E93]">Loading authorization URL...</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
