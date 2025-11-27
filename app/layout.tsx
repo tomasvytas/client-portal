@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   title: "Task Chat - Client Portal",
   description: "Professional client portal for project management and communication",
   icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: '/FavIcon.svg',
+    apple: '/FavIcon.svg',
   },
 };
 
@@ -30,9 +30,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.ico" />
+        <link rel="icon" href="/FavIcon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/FavIcon.svg" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

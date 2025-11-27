@@ -112,7 +112,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Image
-                src="/logo.png"
+                src="/Logo.svg"
                 alt="Task Chat"
                 width={120}
                 height={40}

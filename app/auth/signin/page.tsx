@@ -10,7 +10,7 @@ export default function SignInPage() {
         {/* Logo */}
         <div className="flex justify-center mb-12">
           <Image
-            src="/logo.png"
+            src="/Logo.svg"
             alt="Task Chat Logo"
             width={200}
             height={80}
