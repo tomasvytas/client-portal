@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { generateTaskBrief } from '@/lib/task-brief'
 
 export async function GET(request: NextRequest) {
   try {
@@ -72,6 +73,11 @@ Feel free to share as much detail as you'd like, and I'll help organize everythi
 
 If you'd like to know about pricing, just ask! I can provide estimates based on your project details.`,
       },
+    })
+
+    // Generate initial brief document (async, don't wait)
+    generateTaskBrief(task.id).catch(err => {
+      console.error('Failed to generate initial task brief:', err)
     })
 
     return NextResponse.json({ task })

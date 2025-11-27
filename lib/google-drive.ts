@@ -136,23 +136,37 @@ export async function uploadFileToDrive(
 export async function getFileShareableLink(fileId: string): Promise<string> {
   const drive = getDrive()
 
-  // Make file publicly viewable
-  await drive.permissions.create({
-    fileId,
-    requestBody: {
-      role: 'reader',
-      type: 'anyone',
-    },
-  })
+  try {
+    // Make file publicly viewable
+    console.log('Making file shareable, fileId:', fileId)
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    })
+    console.log('File permissions updated successfully')
 
-  // Get file metadata to get the link
-  const file = await drive.files.get({
-    fileId,
-    fields: 'webViewLink, webContentLink',
-  })
+    // Get file metadata to get the link
+    const file = await drive.files.get({
+      fileId,
+      fields: 'webViewLink, webContentLink',
+    })
 
-  // Return direct download link if available, otherwise web view link
-  return file.data.webContentLink || file.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
+    // Return direct download link if available, otherwise web view link
+    const link = file.data.webContentLink || file.data.webViewLink || `https://drive.google.com/file/d/${fileId}/view`
+    console.log('Shareable link:', link)
+    return link
+  } catch (error: any) {
+    console.error('Error making file shareable:', error)
+    if (error.response) {
+      console.error('Error response status:', error.response.status)
+      console.error('Error response data:', JSON.stringify(error.response.data, null, 2))
+    }
+    // Return a basic link even if sharing fails
+    return `https://drive.google.com/file/d/${fileId}/view`
+  }
 }
 
 /**

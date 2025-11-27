@@ -97,6 +97,8 @@ export async function POST(
     
     // Fallback to Cloudinary if Google Drive failed or not configured
     if (!url && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      console.log('⚠️ FALLING BACK TO CLOUDINARY - Google Drive upload did not succeed')
+      console.log('This means Google Drive upload failed or was not attempted')
       cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
@@ -117,6 +119,7 @@ export async function POST(
         ...metadata,
         storageType: 'cloudinary',
       }
+      console.log('File uploaded to Cloudinary instead:', url)
     }
     
     // Fallback to local filesystem if neither Google Drive nor Cloudinary is available
