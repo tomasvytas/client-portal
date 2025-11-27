@@ -135,12 +135,15 @@ export async function getAIResponse(
   userMessage: string,
   context: TaskContext
 ): Promise<{ response: string; extractedData?: Partial<TaskContext> }> {
-  // Get conversation history
+  // Get conversation history (reduced for speed)
   const messages = await prisma.message.findMany({
     where: { taskId: context.taskId },
-    orderBy: { createdAt: 'asc' },
-    take: 30, // Last 30 messages for context
+    orderBy: { createdAt: 'desc' },
+    take: 10, // Last 10 messages for context (reduced from 30 for speed)
   })
+  
+  // Reverse to get chronological order
+  messages.reverse()
 
   const conversationHistory = messages.map(m => ({
     role: m.role as 'user' | 'assistant' | 'system',
@@ -190,40 +193,28 @@ Remember:
 - Be helpful, professional, and guide the conversation to collect all necessary information.`
 
   let response: string
-  try {
-    const completion = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...conversationHistory,
-        { role: "user", content: userMessage },
-      ],
-      temperature: 0.8,
-    })
-
-    let rawResponse = completion.choices[0]?.message?.content || "I apologize, but I couldn't process that request."
-    
-    // Remove markdown formatting (**, __, etc.)
-    response = rawResponse
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove **bold**
-      .replace(/\*(.*?)\*/g, '$1') // Remove *italic*
-      .replace(/__(.*?)__/g, '$1') // Remove __bold__
-      .replace(/_(.*?)_/g, '$1') // Remove _italic_
-      .replace(/~~(.*?)~~/g, '$1') // Remove ~~strikethrough~~
-      .replace(/`(.*?)`/g, '$1') // Remove `code`
-      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-      .trim()
-  } catch (error: any) {
-    console.error('OpenAI API error:', error)
-    throw new Error(`OpenAI API error: ${error?.message || 'Unknown error'}`)
-  }
-
-  // Extract structured data from the conversation
-  const extractedData: Partial<TaskContext> = {}
+  let extractedData: Partial<TaskContext> = {}
   
-  // Try to extract information using a separate extraction call
   try {
-    const extractionPrompt = `Extract the following information from this user message. Return ONLY a JSON object with these fields (use null if not found):
+    // Make both API calls in parallel for speed
+    const [completion, extractionCompletion] = await Promise.all([
+      // Main response call
+      getOpenAI().chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...conversationHistory,
+          { role: "user", content: userMessage },
+        ],
+        temperature: 0.8,
+        max_tokens: 500, // Reduced for faster responses
+      }),
+      // Data extraction call (in parallel)
+      getOpenAI().chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a data extraction assistant. Return only valid JSON." },
+          { role: "user", content: `Extract the following information from this user message. Return ONLY a JSON object with these fields (use null if not found):
 {
   "clientName": "string or null",
   "clientEmail": "string or null", 
@@ -249,54 +240,69 @@ IMPORTANT for deadline:
 - If the user provides a specific date, extract it as-is
 - The system will convert relative dates to ISO format automatically
 
-Only extract NEW information that wasn't already in the context. Return valid JSON only.`
+Only extract NEW information that wasn't already in the context. Return valid JSON only.` },
+        ],
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+        max_tokens: 200, // Reduced for speed
+      }),
+    ])
 
-    const extractionCompletion = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a data extraction assistant. Return only valid JSON." },
-        { role: "user", content: extractionPrompt },
-      ],
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-    })
-
-    const extracted = JSON.parse(extractionCompletion.choices[0]?.message?.content || '{}')
+    let rawResponse = completion.choices[0]?.message?.content || "I apologize, but I couldn't process that request."
     
-    if (extracted.clientName) extractedData.clientName = extracted.clientName
-    if (extracted.clientEmail) extractedData.clientEmail = extracted.clientEmail
-    if (extracted.productName) extractedData.productName = extracted.productName
-    if (extracted.productDescription) extractedData.productDescription = extracted.productDescription
+    // Remove markdown formatting (**, __, etc.)
+    response = rawResponse
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove **bold**
+      .replace(/\*(.*?)\*/g, '$1') // Remove *italic*
+      .replace(/__(.*?)__/g, '$1') // Remove __bold__
+      .replace(/_(.*?)_/g, '$1') // Remove _italic_
+      .replace(/~~(.*?)~~/g, '$1') // Remove ~~strikethrough~~
+      .replace(/`(.*?)`/g, '$1') // Remove `code`
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .trim()
     
-    // Parse deadline - handle relative dates like "tomorrow"
-    if (extracted.deadline) {
-      // First try to parse as relative date
-      const relativeDate = parseRelativeDate(extracted.deadline)
-      if (relativeDate) {
-        extractedData.deadline = relativeDate
-      } else {
-        // If not a relative date, try to parse as ISO date or regular date
-        const parsed = new Date(extracted.deadline)
-        if (!isNaN(parsed.getTime())) {
-          extractedData.deadline = parsed.toISOString()
+    // Parse extraction result
+    try {
+      const extracted = JSON.parse(extractionCompletion.choices[0]?.message?.content || '{}')
+    
+      if (extracted.clientName) extractedData.clientName = extracted.clientName
+      if (extracted.clientEmail) extractedData.clientEmail = extracted.clientEmail
+      if (extracted.productName) extractedData.productName = extracted.productName
+      if (extracted.productDescription) extractedData.productDescription = extracted.productDescription
+      
+      // Parse deadline - handle relative dates like "tomorrow"
+      if (extracted.deadline) {
+        // First try to parse as relative date
+        const relativeDate = parseRelativeDate(extracted.deadline)
+        if (relativeDate) {
+          extractedData.deadline = relativeDate
+        } else {
+          // If not a relative date, try to parse as ISO date or regular date
+          const parsed = new Date(extracted.deadline)
+          if (!isNaN(parsed.getTime())) {
+            extractedData.deadline = parsed.toISOString()
+          }
         }
       }
-    }
-    
-    // Handle pricing - check if user asked about price or mentioned a price
-    const lowerMessage = userMessage.toLowerCase()
-    if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('how much')) {
-      if (extracted.estimatedPrice) {
-        extractedData.estimatedPrice = extracted.estimatedPrice
-      } else if (context.productName || context.productDescription) {
-        // Calculate price based on product description
-        const description = context.productDescription || context.productName || ''
-        extractedData.estimatedPrice = calculatePrice(description, description)
+      
+      // Handle pricing - check if user asked about price or mentioned a price
+      const lowerMessage = userMessage.toLowerCase()
+      if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('how much')) {
+        if (extracted.estimatedPrice) {
+          extractedData.estimatedPrice = extracted.estimatedPrice
+        } else if (context.productName || context.productDescription) {
+          // Calculate price based on product description
+          const description = context.productDescription || context.productName || ''
+          extractedData.estimatedPrice = calculatePrice(description, description)
+        }
       }
+    } catch (e) {
+      // Extraction failed, that's okay - we'll just use the natural response
+      console.error('Error parsing extraction data:', e)
     }
-  } catch (e) {
-    // Extraction failed, that's okay - we'll just use the natural response
-    console.error('Error extracting data:', e)
+  } catch (error: any) {
+    console.error('OpenAI API error:', error)
+    throw new Error(`OpenAI API error: ${error?.message || 'Unknown error'}`)
   }
 
   return {

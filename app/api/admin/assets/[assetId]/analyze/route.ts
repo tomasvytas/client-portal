@@ -70,18 +70,20 @@ export async function POST(
           content: [
             {
               type: 'text',
-              text: `Analyze this image and provide:
-1. All text visible in the image (OCR) - extract every word you can see
-2. A detailed description of what the image shows
-3. If this appears to be an advertisement for Meta (Facebook/Instagram), identify it and describe the ad content, target audience, and key messaging
-4. Any other relevant details about the image
+              text: `Analyze this image and provide structured JSON:
+{
+  "extractedText": "All visible text from the image, formatted with line breaks where appropriate",
+  "description": "Detailed description with proper formatting and structure",
+  "isMetaAd": boolean,
+  "metaAdDetails": {
+    "content": "Ad content description",
+    "targetAudience": "Target audience description",
+    "keyMessaging": "Key messaging points"
+  },
+  "otherDetails": "Any other relevant information"
+}
 
-Format your response as JSON with these fields:
-- extractedText: string (all text found in the image)
-- description: string (detailed description)
-- isMetaAd: boolean (true if this is a Meta ad)
-- metaAdDetails: object (if isMetaAd is true, include: content, targetAudience, keyMessaging)
-- otherDetails: string (any other relevant information)`,
+IMPORTANT: Format extractedText and description with proper line breaks (\n) for readability. Use bullet points or numbered lists where appropriate.`,
             },
             {
               type: 'image_url',
@@ -92,7 +94,8 @@ Format your response as JSON with these fields:
           ],
         },
       ],
-      max_tokens: 1000,
+      max_tokens: 2000,
+      response_format: { type: "json_object" },
     })
 
     const analysisText = response.choices[0]?.message?.content || '{}'

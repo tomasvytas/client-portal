@@ -686,9 +686,13 @@ function TaskDetailModal({ task: initialTask, onClose, loading }: { task: TaskDe
                                       <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1.5 block">
                                         Extracted Text
                                       </label>
-                                      <p className="text-[14px] text-[#FFFFFF] bg-[#000000] rounded-lg p-3 border border-[#38383A]/30 whitespace-pre-wrap">
-                                        {analysis.extractedText}
-                                      </p>
+                                      <div className="text-[14px] text-[#FFFFFF] bg-[#000000] rounded-lg p-3 border border-[#38383A]/30 whitespace-pre-wrap leading-relaxed">
+                                        {analysis.extractedText.split('\n').map((line: string, idx: number) => (
+                                          <div key={idx} className={line.trim() ? 'mb-1' : 'mb-2'}>
+                                            {line || '\u00A0'}
+                                          </div>
+                                        ))}
+                                      </div>
                                     </div>
                                   )}
                                   
@@ -697,9 +701,35 @@ function TaskDetailModal({ task: initialTask, onClose, loading }: { task: TaskDe
                                       <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1.5 block">
                                         Description
                                       </label>
-                                      <p className="text-[14px] text-[#FFFFFF]">
-                                        {analysis.description}
-                                      </p>
+                                      <div className="text-[14px] text-[#FFFFFF] leading-relaxed">
+                                        {analysis.description.split('\n').map((line: string, idx: number) => {
+                                          // Check if line looks like a bullet point or numbered list
+                                          const bulletMatch = line.match(/^[-•*]\s*(.+)$/)
+                                          const numberMatch = line.match(/^\d+[.)]\s*(.+)$/)
+                                          
+                                          if (bulletMatch) {
+                                            return (
+                                              <div key={idx} className="flex items-start gap-2 mb-1.5">
+                                                <span className="text-[#007AFF] mt-1">•</span>
+                                                <span>{bulletMatch[1]}</span>
+                                              </div>
+                                            )
+                                          } else if (numberMatch) {
+                                            return (
+                                              <div key={idx} className="flex items-start gap-2 mb-1.5">
+                                                <span className="text-[#007AFF] mt-1 font-semibold">{line.match(/^\d+/)?.[0]}.</span>
+                                                <span>{numberMatch[1]}</span>
+                                              </div>
+                                            )
+                                          } else {
+                                            return (
+                                              <div key={idx} className={line.trim() ? 'mb-1.5' : 'mb-2'}>
+                                                {line || '\u00A0'}
+                                              </div>
+                                            )
+                                          }
+                                        })}
+                                      </div>
                                     </div>
                                   )}
                                   
