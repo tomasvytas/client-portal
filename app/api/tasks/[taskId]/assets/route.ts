@@ -75,7 +75,9 @@ export async function POST(
           storageType: 'google-drive',
         }
       } catch (error: any) {
-        console.error('Google Drive upload failed, falling back:', error)
+        console.error('Google Drive upload failed:', error)
+        console.error('Error message:', error?.message)
+        console.error('Error stack:', error?.stack)
         // Fall through to Cloudinary or local storage
       }
     }

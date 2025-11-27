@@ -151,8 +151,15 @@ export async function getFileShareableLink(fileId: string): Promise<string> {
  * @returns Assets folder ID
  */
 export async function setupTaskFolders(taskName: string): Promise<string> {
-  // Create or find task folder
-  const taskFolderId = await findOrCreateFolder(taskName)
+  // Get the base folder ID from environment (shared folder with service account)
+  const baseFolderId = process.env.GOOGLE_DRIVE_BASE_FOLDER_ID
+  
+  if (!baseFolderId) {
+    throw new Error('GOOGLE_DRIVE_BASE_FOLDER_ID environment variable is required. Please share a Google Drive folder with the service account and set its folder ID.')
+  }
+  
+  // Create or find task folder inside the base folder
+  const taskFolderId = await findOrCreateFolder(taskName, baseFolderId)
   
   // Create or find Assets folder inside task folder
   const assetsFolderId = await findOrCreateFolder('Assets', taskFolderId)

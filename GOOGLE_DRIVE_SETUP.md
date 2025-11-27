@@ -39,8 +39,13 @@ This guide will help you set up Google Drive integration for automatic image upl
 6. Paste the `client_email` address
 7. Give it **Editor** permissions
 8. Click **Send**
+9. **Get the Folder ID**: 
+   - Open the shared folder in Google Drive
+   - Look at the URL: `https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j`
+   - Copy the folder ID (the part after `/folders/`): `1a2b3c4d5e6f7g8h9i0j`
+   - You'll need this for the `GOOGLE_DRIVE_BASE_FOLDER_ID` environment variable
 
-**Note**: The service account will create folders inside this shared folder, or you can use the root of the service account's Drive.
+**Note**: The service account will create task folders inside this shared folder.
 
 ## Step 5: Add Credentials to Environment Variables
 
@@ -50,6 +55,8 @@ This guide will help you set up Google Drive integration for automatic image upl
 
 ```bash
 GOOGLE_DRIVE_CREDENTIALS='{"type":"service_account","project_id":"...","private_key_id":"...","private_key":"...","client_email":"...","client_id":"...","auth_uri":"...","token_uri":"...","auth_provider_x509_cert_url":"...","client_x509_cert_url":"..."}'
+
+GOOGLE_DRIVE_BASE_FOLDER_ID="1a2b3c4d5e6f7g8h9i0j"
 ```
 
 **Important**: 
@@ -57,6 +64,7 @@ GOOGLE_DRIVE_CREDENTIALS='{"type":"service_account","project_id":"...","private_
 - Use single quotes around the JSON string
 - Escape any single quotes inside the JSON if needed
 - In Vercel, paste the JSON directly (it will handle escaping)
+- Replace `1a2b3c4d5e6f7g8h9i0j` with your actual folder ID from Step 4
 
 ## Step 6: Deploy
 
@@ -92,5 +100,12 @@ The system uses this priority for storage:
 ### Files not appearing in Google Drive
 - Check the service account email in the JSON file
 - Verify the folder was shared with the correct email
+- Make sure `GOOGLE_DRIVE_BASE_FOLDER_ID` is set correctly
+- Verify the folder ID is correct (check the URL)
 - Check Vercel logs for detailed error messages
+
+### Error: "GOOGLE_DRIVE_BASE_FOLDER_ID environment variable is required"
+- You need to set the `GOOGLE_DRIVE_BASE_FOLDER_ID` environment variable
+- Get the folder ID from the Google Drive URL after sharing the folder with the service account
+- The folder ID is the part after `/folders/` in the URL
 
