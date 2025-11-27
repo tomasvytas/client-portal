@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin'
-import { google } from 'googleapis'
+import { OAuth2Client } from 'google-auth-library'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const oauth2Client = new google.auth.OAuth2Client(
+    const oauth2Client = new OAuth2Client(
       clientId,
       clientSecret,
       process.env.NEXTAUTH_URL ? `${process.env.NEXTAUTH_URL}/api/admin/drive/callback` : 'http://localhost:3000/api/admin/drive/callback'
