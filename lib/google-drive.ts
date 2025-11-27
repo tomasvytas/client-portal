@@ -96,25 +96,35 @@ export async function uploadFileToDrive(
     parents: [folderId],
   }
 
-  // Convert buffer to stream for better memory efficiency
-  const { Readable } = await import('stream')
-  const stream = Readable.from(fileBuffer)
-
+  // Use buffer directly instead of stream for better compatibility
   const media = {
     mimeType,
-    body: stream,
+    body: fileBuffer,
   }
 
-  const file = await drive.files.create({
-    requestBody: fileMetadata,
-    media,
-    fields: 'id, webViewLink, webContentLink',
-  })
+  console.log('Uploading to Google Drive - fileName:', fileName, 'mimeType:', mimeType, 'folderId:', folderId, 'bufferSize:', fileBuffer.length)
 
-  return {
-    fileId: file.data.id!,
-    webViewLink: file.data.webViewLink || '',
-    webContentLink: file.data.webContentLink || undefined,
+  try {
+    const file = await drive.files.create({
+      requestBody: fileMetadata,
+      media,
+      fields: 'id, webViewLink, webContentLink',
+    })
+
+    console.log('Google Drive file created successfully:', file.data.id)
+
+    return {
+      fileId: file.data.id!,
+      webViewLink: file.data.webViewLink || '',
+      webContentLink: file.data.webContentLink || undefined,
+    }
+  } catch (error: any) {
+    console.error('Google Drive API error:', error)
+    if (error.response) {
+      console.error('Error response status:', error.response.status)
+      console.error('Error response data:', JSON.stringify(error.response.data, null, 2))
+    }
+    throw error
   }
 }
 
@@ -183,32 +193,43 @@ export async function uploadDocumentToDrive(
 ): Promise<{ fileId: string; webViewLink: string }> {
   const drive = getDrive()
 
-  const { Readable } = await import('stream')
-  const stream = Readable.from(buffer)
-
   const fileMetadata = {
     name: fileName,
     parents: [folderId],
     mimeType,
   }
 
+  // Use buffer directly instead of stream
   const media = {
     mimeType,
-    body: stream,
+    body: buffer,
   }
 
-  const file = await drive.files.create({
-    requestBody: fileMetadata,
-    media,
-    fields: 'id, webViewLink',
-  })
+  console.log('Uploading document to Google Drive - fileName:', fileName, 'mimeType:', mimeType, 'folderId:', folderId, 'bufferSize:', buffer.length)
 
-  // Make file shareable
-  await getFileShareableLink(file.data.id!)
+  try {
+    const file = await drive.files.create({
+      requestBody: fileMetadata,
+      media,
+      fields: 'id, webViewLink',
+    })
 
-  return {
-    fileId: file.data.id!,
-    webViewLink: file.data.webViewLink || `https://drive.google.com/file/d/${file.data.id!}/view`,
+    console.log('Google Drive document created successfully:', file.data.id)
+
+    // Make file shareable
+    await getFileShareableLink(file.data.id!)
+
+    return {
+      fileId: file.data.id!,
+      webViewLink: file.data.webViewLink || `https://drive.google.com/file/d/${file.data.id!}/view`,
+    }
+  } catch (error: any) {
+    console.error('Google Drive document upload error:', error)
+    if (error.response) {
+      console.error('Error response status:', error.response.status)
+      console.error('Error response data:', JSON.stringify(error.response.data, null, 2))
+    }
+    throw error
   }
 }
 

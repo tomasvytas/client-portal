@@ -51,23 +51,30 @@ export async function POST(
     let url: string | undefined = undefined
     let metadata: any = {}
     
-    if (process.env.GOOGLE_DRIVE_CREDENTIALS) {
+    if (process.env.GOOGLE_DRIVE_CREDENTIALS && process.env.GOOGLE_DRIVE_BASE_FOLDER_ID) {
       // Priority 1: Use Google Drive
       try {
+        console.log('Attempting Google Drive upload...')
         // Setup folder structure: Task Name > Assets
         const taskName = task.title || task.productName || `Task ${taskId}`
+        console.log('Setting up folders for task:', taskName)
         const { assetsFolderId } = await setupTaskFolders(taskName)
+        console.log('Assets folder ID:', assetsFolderId)
         
         // Upload file to Google Drive
+        console.log('Uploading file to Google Drive:', file.name, file.type, file.size)
         const driveResult = await uploadFileToDrive(
           buffer,
           file.name,
           file.type,
           assetsFolderId
         )
+        console.log('File uploaded successfully, fileId:', driveResult.fileId)
         
         // Get shareable link
+        console.log('Getting shareable link...')
         url = await getFileShareableLink(driveResult.fileId)
+        console.log('Shareable link obtained:', url)
         
         // Store Google Drive file ID in metadata
         metadata = {
@@ -75,12 +82,17 @@ export async function POST(
           googleDriveFolderId: assetsFolderId,
           storageType: 'google-drive',
         }
+        console.log('Google Drive upload completed successfully')
       } catch (error: any) {
         console.error('Google Drive upload failed:', error)
         console.error('Error message:', error?.message)
+        console.error('Error code:', error?.code)
+        console.error('Error response:', error?.response?.data)
         console.error('Error stack:', error?.stack)
         // Fall through to Cloudinary or local storage
       }
+    } else {
+      console.log('Google Drive not configured - GOOGLE_DRIVE_CREDENTIALS:', !!process.env.GOOGLE_DRIVE_CREDENTIALS, 'GOOGLE_DRIVE_BASE_FOLDER_ID:', !!process.env.GOOGLE_DRIVE_BASE_FOLDER_ID)
     }
     
     // Fallback to Cloudinary if Google Drive failed or not configured

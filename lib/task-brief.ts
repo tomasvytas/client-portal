@@ -10,8 +10,12 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
     // Check if Google Drive is configured
     if (!process.env.GOOGLE_DRIVE_CREDENTIALS || !process.env.GOOGLE_DRIVE_BASE_FOLDER_ID) {
       console.log('Google Drive not configured, skipping brief generation')
+      console.log('GOOGLE_DRIVE_CREDENTIALS:', !!process.env.GOOGLE_DRIVE_CREDENTIALS)
+      console.log('GOOGLE_DRIVE_BASE_FOLDER_ID:', !!process.env.GOOGLE_DRIVE_BASE_FOLDER_ID)
       return
     }
+
+    console.log('Generating task brief for task:', taskId)
 
     // Fetch full task data
     const task = await prisma.task.findUnique({
@@ -39,7 +43,9 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
 
     // Get task folder structure
     const taskName = task.title || task.productName || `Task ${taskId}`
+    console.log('Setting up task folders for:', taskName)
     const { taskFolderId } = await setupTaskFolders(taskName)
+    console.log('Task folder ID:', taskFolderId)
 
     // Extract links from messages
     const urlRegex = /(https?:\/\/[^\s]+)/g
@@ -278,16 +284,22 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
     const buffer = await Packer.toBuffer(doc)
 
     // Upload brief to Google Drive
-    await uploadDocumentToDrive(
+    console.log('Uploading brief document to Google Drive...')
+    const briefResult = await uploadDocumentToDrive(
       buffer,
       `Brief - ${taskName}.docx`,
       taskFolderId,
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     )
-
+    console.log('Brief uploaded successfully, fileId:', briefResult.fileId)
+    console.log('Brief URL:', briefResult.webViewLink)
     console.log('Task brief generated and uploaded to Google Drive')
   } catch (error: any) {
     console.error('Error generating task brief:', error)
+    console.error('Error message:', error?.message)
+    console.error('Error code:', error?.code)
+    console.error('Error response:', error?.response?.data)
+    console.error('Error stack:', error?.stack)
     // Don't throw - brief generation failure shouldn't break the main flow
   }
 }
