@@ -168,32 +168,32 @@ export async function setupTaskFolders(taskName: string): Promise<{ taskFolderId
 }
 
 /**
- * Upload a text document to Google Drive
- * @param content - Text content of the document
+ * Upload a document file to Google Drive
+ * @param buffer - File buffer
  * @param fileName - Name of the document
  * @param folderId - Parent folder ID
+ * @param mimeType - MIME type of the file
  * @returns Object with fileId and webViewLink
  */
-export async function uploadTextDocumentToDrive(
-  content: string,
+export async function uploadDocumentToDrive(
+  buffer: Buffer,
   fileName: string,
-  folderId: string
+  folderId: string,
+  mimeType: string = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ): Promise<{ fileId: string; webViewLink: string }> {
   const drive = getDrive()
 
-  // Convert text to buffer
-  const buffer = Buffer.from(content, 'utf-8')
   const { Readable } = await import('stream')
   const stream = Readable.from(buffer)
 
   const fileMetadata = {
     name: fileName,
     parents: [folderId],
-    mimeType: 'text/plain',
+    mimeType,
   }
 
   const media = {
-    mimeType: 'text/plain',
+    mimeType,
     body: stream,
   }
 

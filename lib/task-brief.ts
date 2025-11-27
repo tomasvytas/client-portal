@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
-import { setupTaskFolders, uploadTextDocumentToDrive } from './google-drive'
+import { setupTaskFolders, uploadDocumentToDrive } from './google-drive'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx'
 
 /**
  * Generate a brief document from task data
@@ -69,61 +70,219 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
       }).format(Number(price))
     }
 
-    // Generate brief content
-    const brief = `PROJECT BRIEF
-${'='.repeat(80)}
+    // Generate brief document using docx
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          // Title
+          new Paragraph({
+            text: 'PROJECT BRIEF',
+            heading: HeadingLevel.TITLE,
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+          }),
+          
+          // Task Information Section
+          new Paragraph({
+            text: 'TASK INFORMATION',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 200, after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Task ID: ', bold: true }),
+              new TextRun({ text: task.id }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Title: ', bold: true }),
+              new TextRun({ text: task.title || 'Untitled Task' }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Status: ', bold: true }),
+              new TextRun({ text: task.status.replace('_', ' ').toUpperCase() }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Created: ', bold: true }),
+              new TextRun({ text: formatDate(task.createdAt) }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Last Updated: ', bold: true }),
+              new TextRun({ text: formatDate(task.updatedAt) }),
+            ],
+            spacing: { after: 200 },
+          }),
+          
+          ...(task.productName ? [
+            new Paragraph({
+              children: [
+                new TextRun({ text: 'Product/Service: ', bold: true }),
+                new TextRun({ text: task.productName }),
+              ],
+            }),
+          ] : []),
+          
+          ...(task.productDescription ? [
+            new Paragraph({
+              text: 'Description:',
+              spacing: { before: 200 },
+            }),
+            new Paragraph({
+              text: task.productDescription,
+              spacing: { after: 200 },
+            }),
+          ] : []),
+          
+          // Client Information Section
+          new Paragraph({
+            text: 'CLIENT INFORMATION',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Name: ', bold: true }),
+              new TextRun({ text: task.clientName || task.user.name || 'Not provided' }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Email: ', bold: true }),
+              new TextRun({ text: task.clientEmail || task.user.email || 'Not provided' }),
+            ],
+            spacing: { after: 200 },
+          }),
+          
+          // Project Details Section
+          new Paragraph({
+            text: 'PROJECT DETAILS',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Deadline: ', bold: true }),
+              new TextRun({ text: formatDate(task.deadline) }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Estimated Price: ', bold: true }),
+              new TextRun({ text: formatPrice(task.estimatedPrice) }),
+            ],
+          }),
+          ...(task.finalPrice ? [
+            new Paragraph({
+              children: [
+                new TextRun({ text: 'Final Price: ', bold: true }),
+                new TextRun({ text: formatPrice(task.finalPrice) }),
+              ],
+            }),
+          ] : []),
+          
+          // Links Section
+          ...(links.size > 0 ? [
+            new Paragraph({
+              text: 'LINKS',
+              heading: HeadingLevel.HEADING_1,
+              spacing: { before: 400, after: 200 },
+            }),
+            ...Array.from(links).map(link => 
+              new Paragraph({
+                text: `• ${link}`,
+                bullet: { level: 0 },
+              })
+            ),
+          ] : []),
+          
+          // Assets Section
+          new Paragraph({
+            text: 'ASSETS',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Total Assets: ', bold: true }),
+              new TextRun({ text: task.assets.length.toString() }),
+            ],
+          }),
+          ...(task.assets.length > 0 ? task.assets.map(asset => 
+            new Paragraph({
+              text: `• ${asset.originalName} (${(asset.size / 1024).toFixed(1)} KB)`,
+              bullet: { level: 0 },
+            })
+          ) : [
+            new Paragraph({
+              text: 'No assets uploaded',
+            }),
+          ]),
+          
+          // Conversation Summary Section
+          new Paragraph({
+            text: 'CONVERSATION SUMMARY',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 400, after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Total Messages: ', bold: true }),
+              new TextRun({ text: task.messages.length.toString() }),
+            ],
+            spacing: { after: 200 },
+          }),
+          
+          ...(task.messages.length > 0 ? task.messages.flatMap((msg, idx) => {
+            const role = msg.role === 'user' ? 'CLIENT' : 'AI ASSISTANT'
+            const timestamp = formatDate(msg.createdAt)
+            return [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `[${idx + 1}] ${role} (${timestamp}):`, bold: true }),
+                ],
+                spacing: { before: 200 },
+              }),
+              new Paragraph({
+                text: msg.content,
+                spacing: { after: 200 },
+              }),
+            ]
+          }) : [
+            new Paragraph({
+              text: 'No messages yet',
+            }),
+          ]),
+          
+          // Footer
+          new Paragraph({
+            text: `Generated: ${new Date().toLocaleString('en-US', { 
+              dateStyle: 'full', 
+              timeStyle: 'long' 
+            })}`,
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400 },
+          }),
+        ],
+      }],
+    })
 
-TASK INFORMATION
-${'-'.repeat(80)}
-Task ID: ${task.id}
-Title: ${task.title || 'Untitled Task'}
-Status: ${task.status.replace('_', ' ').toUpperCase()}
-Created: ${formatDate(task.createdAt)}
-Last Updated: ${formatDate(task.updatedAt)}
-
-${task.productName ? `Product/Service: ${task.productName}` : ''}
-${task.productDescription ? `\nDescription:\n${task.productDescription}` : ''}
-
-CLIENT INFORMATION
-${'-'.repeat(80)}
-Name: ${task.clientName || task.user.name || 'Not provided'}
-Email: ${task.clientEmail || task.user.email || 'Not provided'}
-
-PROJECT DETAILS
-${'-'.repeat(80)}
-Deadline: ${formatDate(task.deadline)}
-Estimated Price: ${formatPrice(task.estimatedPrice)}
-${task.finalPrice ? `Final Price: ${formatPrice(task.finalPrice)}` : ''}
-
-${links.size > 0 ? `LINKS\n${'-'.repeat(80)}\n${Array.from(links).map(link => `- ${link}`).join('\n')}\n` : ''}
-
-ASSETS
-${'-'.repeat(80)}
-Total Assets: ${task.assets.length}
-${task.assets.length > 0 ? task.assets.map(asset => `- ${asset.originalName} (${(asset.size / 1024).toFixed(1)} KB)`).join('\n') : 'No assets uploaded'}
-
-CONVERSATION SUMMARY
-${'-'.repeat(80)}
-Total Messages: ${task.messages.length}
-
-${task.messages.length > 0 ? task.messages.map((msg, idx) => {
-  const role = msg.role === 'user' ? 'CLIENT' : 'AI ASSISTANT'
-  const timestamp = formatDate(msg.createdAt)
-  return `[${idx + 1}] ${role} (${timestamp}):\n${msg.content}\n`
-}).join('\n') : 'No messages yet'}
-
-${'='.repeat(80)}
-Generated: ${new Date().toLocaleString('en-US', { 
-  dateStyle: 'full', 
-  timeStyle: 'long' 
-})}
-`
+    // Generate document buffer
+    const buffer = await Packer.toBuffer(doc)
 
     // Upload brief to Google Drive
-    await uploadTextDocumentToDrive(
-      brief,
-      `Brief - ${taskName}.txt`,
-      taskFolderId
+    await uploadDocumentToDrive(
+      buffer,
+      `Brief - ${taskName}.docx`,
+      taskFolderId,
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     )
 
     console.log('Task brief generated and uploaded to Google Drive')
