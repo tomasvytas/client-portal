@@ -29,23 +29,40 @@ This guide will help you set up Google Drive integration for automatic image upl
 4. Select **JSON** format
 5. Click **Create** - this will download a JSON file
 
-## Step 4: Share Google Drive Folder with Service Account
+## Step 4: Create a Shared Drive and Add Service Account
+
+**IMPORTANT**: Service accounts cannot upload to regular Google Drive folders. You MUST use a **Shared Drive** (formerly Team Drive).
+
+### Option A: Create a New Shared Drive (Recommended)
+
+1. Go to [Google Drive](https://drive.google.com)
+2. Click **Shared drives** in the left sidebar (or **New** → **Shared drive**)
+3. Click **New** → **Shared drive**
+4. Name it (e.g., "Task Chat Files")
+5. Click **Create**
+6. **Get the Shared Drive ID**:
+   - Open the Shared Drive
+   - Look at the URL: `https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j`
+   - Copy the folder ID (the part after `/folders/`): `1a2b3c4d5e6f7g8h9i0j`
+   - This is your `GOOGLE_DRIVE_BASE_FOLDER_ID`
+
+### Option B: Use an Existing Shared Drive
+
+1. Go to your existing Shared Drive
+2. Get the folder ID from the URL (same as above)
+
+### Add Service Account to Shared Drive
 
 1. Open the downloaded JSON file
 2. Find the `client_email` field (e.g., `client-portal-drive@project-id.iam.gserviceaccount.com`)
-3. Go to your Google Drive
-4. Create a folder (or use an existing one) where you want to store task assets
-5. Right-click the folder → **Share**
+3. In your Shared Drive, click the **Shared drive settings** (gear icon)
+4. Click **Manage members**
+5. Click **Add members**
 6. Paste the `client_email` address
-7. Give it **Editor** permissions
+7. Give it **Content Manager** or **Manager** role (NOT just Editor)
 8. Click **Send**
-9. **Get the Folder ID**: 
-   - Open the shared folder in Google Drive
-   - Look at the URL: `https://drive.google.com/drive/folders/1a2b3c4d5e6f7g8h9i0j`
-   - Copy the folder ID (the part after `/folders/`): `1a2b3c4d5e6f7g8h9i0j`
-   - You'll need this for the `GOOGLE_DRIVE_BASE_FOLDER_ID` environment variable
 
-**Note**: The service account will create task folders inside this shared folder.
+**Note**: The service account will create task folders inside this Shared Drive.
 
 ## Step 5: Add Credentials to Environment Variables
 

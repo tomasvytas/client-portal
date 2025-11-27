@@ -19,7 +19,10 @@ function getDrive() {
 
     const auth = new google.auth.GoogleAuth({
       credentials: credentialsJson,
-      scopes: ['https://www.googleapis.com/auth/drive.file'],
+      scopes: [
+        'https://www.googleapis.com/auth/drive.file',
+        'https://www.googleapis.com/auth/drive',
+      ],
     })
 
     driveInstance = google.drive({ version: 'v3', auth })
@@ -50,6 +53,9 @@ export async function findOrCreateFolder(
     q: query + parentQuery,
     fields: 'files(id, name)',
     spaces: 'drive',
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    corpora: 'allDrives',
   })
 
   if (response.data.files && response.data.files.length > 0) {
@@ -70,6 +76,7 @@ export async function findOrCreateFolder(
   const folder = await drive.files.create({
     requestBody: fileMetadata,
     fields: 'id',
+    supportsAllDrives: true,
   })
 
   return folder.data.id!
@@ -112,6 +119,7 @@ export async function uploadFileToDrive(
       requestBody: fileMetadata,
       media,
       fields: 'id, webViewLink, webContentLink',
+      supportsAllDrives: true,
     })
 
     console.log('Google Drive file created successfully:', file.data.id)
@@ -151,6 +159,7 @@ export async function getFileShareableLink(fileId: string): Promise<string> {
         role: 'reader',
         type: 'anyone',
       },
+      supportsAllDrives: true,
     })
     console.log('File permissions updated successfully')
 
@@ -158,6 +167,7 @@ export async function getFileShareableLink(fileId: string): Promise<string> {
     const file = await drive.files.get({
       fileId,
       fields: 'webViewLink, webContentLink',
+      supportsAllDrives: true,
     })
 
     // Return direct download link if available, otherwise web view link
@@ -234,6 +244,7 @@ export async function uploadDocumentToDrive(
       requestBody: fileMetadata,
       media,
       fields: 'id, webViewLink',
+      supportsAllDrives: true,
     })
 
     console.log('Google Drive document created successfully:', file.data.id)
