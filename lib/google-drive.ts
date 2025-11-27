@@ -96,10 +96,13 @@ export async function uploadFileToDrive(
     parents: [folderId],
   }
 
-  // Use buffer directly instead of stream for better compatibility
+  // Convert buffer to stream (required by googleapis)
+  const { Readable } = await import('stream')
+  const stream = Readable.from(fileBuffer)
+
   const media = {
     mimeType,
-    body: fileBuffer,
+    body: stream,
   }
 
   console.log('Uploading to Google Drive - fileName:', fileName, 'mimeType:', mimeType, 'folderId:', folderId, 'bufferSize:', fileBuffer.length)
@@ -123,6 +126,9 @@ export async function uploadFileToDrive(
     if (error.response) {
       console.error('Error response status:', error.response.status)
       console.error('Error response data:', JSON.stringify(error.response.data, null, 2))
+    }
+    if (error.message) {
+      console.error('Error message:', error.message)
     }
     throw error
   }
@@ -210,13 +216,15 @@ export async function uploadDocumentToDrive(
   const fileMetadata = {
     name: fileName,
     parents: [folderId],
-    mimeType,
   }
 
-  // Use buffer directly instead of stream
+  // Convert buffer to stream (required by googleapis)
+  const { Readable } = await import('stream')
+  const stream = Readable.from(buffer)
+
   const media = {
     mimeType,
-    body: buffer,
+    body: stream,
   }
 
   console.log('Uploading document to Google Drive - fileName:', fileName, 'mimeType:', mimeType, 'folderId:', folderId, 'bufferSize:', buffer.length)
@@ -242,6 +250,9 @@ export async function uploadDocumentToDrive(
     if (error.response) {
       console.error('Error response status:', error.response.status)
       console.error('Error response data:', JSON.stringify(error.response.data, null, 2))
+    }
+    if (error.message) {
+      console.error('Error message:', error.message)
     }
     throw error
   }
