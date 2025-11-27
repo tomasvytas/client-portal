@@ -153,8 +153,26 @@ export async function getAIResponse(
   const missingInfo = getMissingInfo(context)
   const hasAssets = context.assets && context.assets.length > 0
 
+  // Get current date and time for context
+  const now = new Date()
+  const currentDate = now.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+  const currentTime = now.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZoneName: 'short'
+  })
+
   // Build system prompt
-  const systemPrompt = `You are a professional, friendly client service agent helping to collect information about creative projects. Your role is to:
+  const systemPrompt = `You are a professional, friendly client service agent helping to collect information about creative projects. 
+
+IMPORTANT: Today's date is ${currentDate}. The current time is ${currentTime}. Always use this information when answering questions about dates or time.
+
+Your role is to:
 
 1. **Ask questions systematically** to gather:
    - Product/service name (if not provided)
