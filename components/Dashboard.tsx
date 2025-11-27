@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
+import Image from 'next/image'
 
 interface Task {
   id: string
@@ -109,7 +110,16 @@ export default function Dashboard() {
       <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-[20px] font-semibold text-[#FFFFFF]">Client Portal</h1>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="Task Chat"
+                width={120}
+                height={40}
+                className="object-contain"
+                priority
+              />
+            </div>
             <div className="flex items-center gap-5">
               {isAdmin && (
                 <button
