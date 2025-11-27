@@ -21,6 +21,7 @@
     "@types/multer": "^2.0.0",
     "@vercel/blob": "^1.1.1",
     "cloudinary": "^2.8.0",
+    "googleapis": "^166.0.0",
     "lucide-react": "^0.554.0",
     "multer": "^2.0.2",
     "next": "16.0.3",

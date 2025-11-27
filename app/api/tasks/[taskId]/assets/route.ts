@@ -5,6 +5,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { v2 as cloudinary } from 'cloudinary'
+import { setupTaskFolders, uploadFileToDrive, getFileShareableLink } from '@/lib/google-drive'
 
 export async function POST(
   request: NextRequest,
@@ -42,18 +43,51 @@ export async function POST(
     const fileExtension = file.name.split('.').pop()
     const uniqueFilename = `${randomUUID()}.${fileExtension}`
     
-    // Use Cloudinary in production, local filesystem in development
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    
+    // Priority: Google Drive > Cloudinary > Local filesystem
     let url: string
-    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-      // Production: Use Cloudinary
+    let metadata: any = {}
+    
+    if (process.env.GOOGLE_DRIVE_CREDENTIALS) {
+      // Priority 1: Use Google Drive
+      try {
+        // Setup folder structure: Task Name > Assets
+        const taskName = task.title || task.productName || `Task ${taskId}`
+        const assetsFolderId = await setupTaskFolders(taskName)
+        
+        // Upload file to Google Drive
+        const driveResult = await uploadFileToDrive(
+          buffer,
+          file.name,
+          file.type,
+          assetsFolderId
+        )
+        
+        // Get shareable link
+        url = await getFileShareableLink(driveResult.fileId)
+        
+        // Store Google Drive file ID in metadata
+        metadata = {
+          googleDriveFileId: driveResult.fileId,
+          googleDriveFolderId: assetsFolderId,
+          storageType: 'google-drive',
+        }
+      } catch (error: any) {
+        console.error('Google Drive upload failed, falling back:', error)
+        // Fall through to Cloudinary or local storage
+      }
+    }
+    
+    // Fallback to Cloudinary if Google Drive failed or not configured
+    if (!url && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
         api_secret: process.env.CLOUDINARY_API_SECRET,
       })
       
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
       const base64 = buffer.toString('base64')
       const dataUri = `data:${file.type};base64,${base64}`
       
@@ -64,15 +98,23 @@ export async function POST(
       })
       
       url = result.secure_url
-    } else {
-      // Development: Use local filesystem
+      metadata = {
+        ...metadata,
+        storageType: 'cloudinary',
+      }
+    }
+    
+    // Fallback to local filesystem if neither Google Drive nor Cloudinary is available
+    if (!url) {
       const uploadsDir = join(process.cwd(), 'uploads', taskId)
       await mkdir(uploadsDir, { recursive: true })
       const filePath = join(uploadsDir, uniqueFilename)
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
       await writeFile(filePath, buffer)
       url = `/api/files/${taskId}/${uniqueFilename}`
+      metadata = {
+        ...metadata,
+        storageType: 'local',
+      }
     }
 
     // Save to database
@@ -84,6 +126,7 @@ export async function POST(
         mimeType: file.type,
         size: file.size,
         url,
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       },
     })
 
