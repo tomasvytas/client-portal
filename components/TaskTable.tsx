@@ -10,6 +10,7 @@ interface Task {
   clientName: string | null
   clientEmail: string | null
   productName: string | null
+  productDescription: string | null
   deadline: string | null
   estimatedPrice: number | null
   finalPrice: number | null
