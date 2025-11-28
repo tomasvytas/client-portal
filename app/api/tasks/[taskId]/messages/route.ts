@@ -99,6 +99,7 @@ export async function POST(
     // Get AI response
     const context = {
       taskId,
+      userId: session.user.id, // Pass userId to fetch user's products
       clientName: task.clientName || undefined,
       clientEmail: task.clientEmail || undefined,
       productName: task.productName || undefined,

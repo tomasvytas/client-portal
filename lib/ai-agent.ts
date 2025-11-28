@@ -32,6 +32,7 @@ function getGemini(): GoogleGenerativeAI {
 
 export interface TaskContext {
   taskId: string
+  userId?: string // Add userId to fetch user's products
   clientName?: string
   clientEmail?: string
   productName?: string
@@ -311,6 +312,42 @@ async function getChatGPTResponse(
   const servicesList = availableServices.length > 0
     ? availableServices.map(s => `- ${s.name}${s.description ? `: ${s.description}` : ''} (keywords: ${s.keywords.join(', ')})`).join('\n')
     : 'No services configured yet.'
+
+  // Get user's analyzed products (if userId is provided)
+  let productsInfo = ''
+  if (context.userId) {
+    try {
+      const prismaAny = prisma as any
+      if (prismaAny.product) {
+        const userProducts = await prismaAny.product.findMany({
+          where: {
+            userId: context.userId,
+            status: 'completed',
+          },
+          select: {
+            name: true,
+            productType: true,
+            brandGuidelines: true,
+            analysisData: true,
+          },
+          take: 10, // Limit to recent products
+        })
+
+        if (userProducts.length > 0) {
+          productsInfo = `\n\nANALYZED PRODUCTS (When client mentions a product name, use this information):
+${userProducts.map((p: any) => {
+  const guidelines = p.brandGuidelines ? p.brandGuidelines.substring(0, 500) + '...' : 'No guidelines available'
+  return `- ${p.name}${p.productType ? ` (Type: ${p.productType})` : ''}:
+  ${guidelines}`
+}).join('\n\n')}
+
+IMPORTANT: If the client mentions a product name that matches one of the analyzed products above, use the brand guidelines and analysis data to provide contextually relevant responses. You now understand their brand, target audience, and messaging.`
+        }
+      }
+    } catch (error: any) {
+      console.warn('Could not fetch user products:', error?.message)
+    }
+  }
 
   // Build system prompt
   const systemPrompt = `You are a professional, friendly client service agent helping to collect information about creative projects. 

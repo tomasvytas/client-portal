@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   tasks         Task[]
+  products      Product[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -114,4 +115,32 @@ model Pricing {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Video Production", "Graphic Design", "Web Development"
+  description String?  @db.Text // Brief description of the service
+  keywords    String[] // Keywords to help AI identify service requests (e.g., ["video", "film", "animation"])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String   // Product/brand name
+  websiteUrl      String?  // Brand website URL
+  productType     String?  // Type/category of product (inferred from analysis)
+  brandGuidelines String?  @db.Text // Generated brand guidelines (markdown)
+  analysisData    Json?    // Full analysis data (brand essence, target audience, etc.)
+  googleDriveDocId String? // Google Drive document ID if saved
+  status          String   @default("pending") // pending, analyzing, completed, failed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([name])
 }

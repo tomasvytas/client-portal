@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy } from 'lucide-react'
+import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase } from 'lucide-react'
 import PricingManagement from './PricingManagement'
 import TaskBoard from './TaskBoard'
+import ServicesManagement from './ServicesManagement'
 
-type Tab = 'board' | 'pricing' | 'settings'
+type Tab = 'board' | 'pricing' | 'services' | 'settings'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -111,6 +112,17 @@ export default function AdminDashboard() {
               Pricing
             </button>
             <button
+              onClick={() => setActiveTab('services')}
+              className={`${
+                activeTab === 'services'
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
+            >
+              <Briefcase className="w-5 h-5" />
+              Services
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`${
                 activeTab === 'settings'
@@ -129,6 +141,7 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'board' && <TaskBoard />}
         {activeTab === 'pricing' && <PricingManagement />}
+        {activeTab === 'services' && <ServicesManagement />}
         {activeTab === 'settings' && (
           <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
             <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
+import { Package } from 'lucide-react'
 
 interface Task {
   id: string
