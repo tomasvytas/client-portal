@@ -205,9 +205,9 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
           page: {
             margin: {
               top: 1440, // 1 inch
-              right: 1440,
+              right: 1080, // 0.75 inch
               bottom: 1440,
-              left: 1440,
+              left: 1080, // 0.75 inch - narrower margins for wider tables
             },
           },
         },
@@ -251,6 +251,15 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
           // Project details in a clean table format
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
+            columnWidths: [4500, 4500], // Split evenly: 50/50
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              bottom: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              left: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              right: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+            },
             rows: [
               new TableRow({
                 children: [
@@ -263,9 +272,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
-                    width: { size: 35, type: WidthType.PERCENTAGE },
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -276,9 +286,9 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...bodyStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
-                    width: { size: 65, type: WidthType.PERCENTAGE },
                   }),
                 ],
               }),
@@ -294,8 +304,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                               ...labelStyle,
                             }),
                           ],
+                          spacing: { after: 200 },
                         }),
                       ],
+                      shading: { fill: 'F5F5F7' },
                     }),
                     new TableCell({
                       children: [
@@ -306,6 +318,7 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                               ...bodyStyle,
                             }),
                           ],
+                          spacing: { after: 200 },
                         }),
                       ],
                     }),
@@ -323,8 +336,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -335,6 +350,7 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...bodyStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
                   }),
@@ -351,8 +367,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -363,6 +381,7 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...secondaryStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
                   }),
@@ -405,6 +424,15 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
 
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
+            columnWidths: [4500, 4500], // Split evenly: 50/50
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              bottom: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              left: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              right: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+            },
             rows: [
               new TableRow({
                 children: [
@@ -417,9 +445,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
-                    width: { size: 35, type: WidthType.PERCENTAGE },
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -430,9 +459,9 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...bodyStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
-                    width: { size: 65, type: WidthType.PERCENTAGE },
                   }),
                 ],
               }),
@@ -447,8 +476,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -459,6 +490,7 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...bodyStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
                   }),
@@ -480,6 +512,15 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
 
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
+            columnWidths: [4500, 4500], // Split evenly: 50/50
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              bottom: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              left: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              right: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+              insideVertical: { style: BorderStyle.SINGLE, size: 1, color: 'D2D2D7' },
+            },
             rows: [
               new TableRow({
                 children: [
@@ -492,9 +533,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
-                    width: { size: 35, type: WidthType.PERCENTAGE },
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -505,9 +547,9 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...bodyStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
-                    width: { size: 65, type: WidthType.PERCENTAGE },
                   }),
                 ],
               }),
@@ -522,8 +564,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...labelStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
+                    shading: { fill: 'F5F5F7' },
                   }),
                   new TableCell({
                     children: [
@@ -534,6 +578,7 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                             ...bodyStyle,
                           }),
                         ],
+                        spacing: { after: 200 },
                       }),
                     ],
                   }),
@@ -551,8 +596,10 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                               ...labelStyle,
                             }),
                           ],
+                          spacing: { after: 200 },
                         }),
                       ],
+                      shading: { fill: 'F5F5F7' },
                     }),
                     new TableCell({
                       children: [
@@ -563,6 +610,7 @@ export async function generateTaskBrief(taskId: string): Promise<void> {
                               ...bodyStyle,
                             }),
                           ],
+                          spacing: { after: 200 },
                         }),
                       ],
                     }),
