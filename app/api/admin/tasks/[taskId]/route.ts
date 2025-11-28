@@ -36,3 +36,29 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ taskId: string }> }
+) {
+  try {
+    await requireAdmin()
+
+    const { taskId } = await params
+
+    await prisma.task.delete({
+      where: { id: taskId },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    if (error.message.includes('Unauthorized')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    console.error('Error deleting task:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete task' },
+      { status: 500 }
+    )
+  }
+}
+

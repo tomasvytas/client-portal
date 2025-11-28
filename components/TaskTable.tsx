@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, DollarSign, User, FileText, Edit2, CheckCircle, Archive, Play } from 'lucide-react'
+import { Calendar, DollarSign, User, FileText, Edit2, CheckCircle, Archive, Play, X, ExternalLink, Trash2, MoreVertical, Loader2 } from 'lucide-react'
 
 interface Task {
   id: string
@@ -24,6 +24,25 @@ interface Task {
     messages: number
     assets: number
   }
+}
+
+interface TaskDetail extends Task {
+  googleDriveFolderLink?: string | null
+  briefDocumentLink?: string | null
+  messages?: Array<{
+    id: string
+    role: string
+    content: string
+    createdAt: string
+  }>
+  assets?: Array<{
+    id: string
+    filename: string
+    originalName: string
+    url: string
+    mimeType: string
+    size: number
+  }>
 }
 
 const statusOptions = [
@@ -51,6 +70,9 @@ export default function TaskTable() {
   const [loading, setLoading] = useState(true)
   const [editingStatus, setEditingStatus] = useState<string | null>(null)
   const [updating, setUpdating] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<TaskDetail | null>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTasks()
@@ -84,6 +106,10 @@ export default function TaskTable() {
           )
         )
         setEditingStatus(null)
+        // Update selected task if it's open
+        if (selectedTask && selectedTask.id === taskId) {
+          setSelectedTask({ ...selectedTask, status: newStatus })
+        }
       } else {
         const error = await res.json()
         alert(error.error || 'Failed to update status')
@@ -93,6 +119,53 @@ export default function TaskTable() {
       alert('Failed to update status')
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleViewDetails = async (task: Task) => {
+    setLoadingDetails(true)
+    setSelectedTask(null)
+    try {
+      const res = await fetch(`/api/admin/tasks/${task.id}/details`)
+      const data = await res.json()
+      if (res.ok) {
+        setSelectedTask(data.task)
+      } else {
+        alert(data.error || 'Failed to load task details')
+      }
+    } catch (error) {
+      console.error('Error loading task details:', error)
+      alert('Failed to load task details')
+    } finally {
+      setLoadingDetails(false)
+    }
+  }
+
+  const handleDelete = async (taskId: string) => {
+    if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      return
+    }
+
+    setDeleting(taskId)
+    try {
+      const res = await fetch(`/api/admin/tasks/${taskId}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        setTasks((prev) => prev.filter((task) => task.id !== taskId))
+        if (selectedTask && selectedTask.id === taskId) {
+          setSelectedTask(null)
+        }
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to delete task')
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      alert('Failed to delete task')
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -261,11 +334,23 @@ export default function TaskTable() {
                   <td className="px-4 sm:px-6 py-4">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => window.open(`/tasks/${task.id}`, '_blank')}
+                        onClick={() => handleViewDetails(task)}
                         className="p-2 text-[#007AFF] hover:bg-[#007AFF]/10 rounded-lg transition-colors"
-                        title="View task"
+                        title="View details"
                       >
-                        <FileText className="w-4 h-4" />
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task.id)}
+                        disabled={deleting === task.id}
+                        className="p-2 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors disabled:opacity-50"
+                        title="Delete task"
+                      >
+                        {deleting === task.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </td>
@@ -274,6 +359,260 @@ export default function TaskTable() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Task Detail Modal */}
+      {(selectedTask || loadingDetails) && (
+        <TaskDetailModal
+          task={selectedTask}
+          loading={loadingDetails}
+          onClose={() => setSelectedTask(null)}
+          onDelete={handleDelete}
+        />
+      )}
+    </div>
+  )
+}
+
+function TaskDetailModal({
+  task,
+  loading,
+  onClose,
+  onDelete,
+}: {
+  task: TaskDetail | null
+  loading: boolean
+  onClose: () => void
+  onDelete: (taskId: string) => void
+}) {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Not set'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }
+
+  const formatPrice = (price: number | null) => {
+    if (!price) return 'Not set'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(price)
+  }
+
+  const getStatusColor = (status: string) => {
+    const mappedStatus = mapStatus(status)
+    switch (mappedStatus) {
+      case 'done':
+        return 'bg-[#34C759]/10 text-[#34C759]'
+      case 'started':
+        return 'bg-[#007AFF]/10 text-[#007AFF]'
+      case 'archive':
+        return 'bg-[#8E8E93]/10 text-[#8E8E93]'
+      case 'draft':
+      default:
+        return 'bg-[#FF9500]/10 text-[#FF9500]'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-[#000000]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/50">
+          <Loader2 className="w-8 h-8 text-[#007AFF] animate-spin mx-auto" />
+          <p className="text-[#8E8E93] text-[15px] mt-4 text-center">Loading task details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!task) return null
+
+  return (
+    <div
+      className="fixed inset-0 bg-[#000000]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/50 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-[#38383A]/30">
+          <h2 className="text-[20px] sm:text-[24px] font-bold text-[#FFFFFF]">
+            {task.productName || task.title || 'Untitled Task'}
+          </h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onDelete(task.id)}
+              className="p-2 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors"
+              title="Delete task"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-[#8E8E93] hover:bg-[#2C2C2E] rounded-lg transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="space-y-6">
+            {/* Task Summary */}
+            <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-4 sm:p-6 border border-[#007AFF]/20">
+              <h3 className="text-[17px] sm:text-[20px] font-semibold text-[#FFFFFF] mb-4 flex items-center gap-2.5">
+                <FileText className="w-5 h-5 text-[#007AFF]" />
+                Task Summary
+              </h3>
+              <div className="space-y-4">
+                {/* Product Name */}
+                {task.productName && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Product/Service</label>
+                    <p className="text-[17px] text-[#FFFFFF] mt-1.5 font-semibold">{task.productName}</p>
+                  </div>
+                )}
+
+                {/* Description */}
+                {task.productDescription && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Description</label>
+                    <p className="text-[#FFFFFF] mt-1.5 whitespace-pre-wrap leading-relaxed text-[15px]">{task.productDescription}</p>
+                  </div>
+                )}
+
+                {/* Key Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#007AFF]/30">
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Deadline</label>
+                    <p className="text-[15px] font-semibold text-[#FFFFFF] mt-1.5 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#8E8E93]" />
+                      {formatDate(task.deadline)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Budget</label>
+                    <div className="mt-1.5">
+                      {task.finalPrice ? (
+                        <p className="text-[15px] font-semibold text-[#30D158] flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Final: {formatPrice(task.finalPrice)}
+                        </p>
+                      ) : task.estimatedPrice ? (
+                        <p className="text-[15px] font-semibold text-[#007AFF] flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Estimated: {formatPrice(task.estimatedPrice)}
+                        </p>
+                      ) : (
+                        <p className="text-[15px] text-[#8E8E93]">Not set</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Client</label>
+                    <p className="text-[15px] text-[#FFFFFF] mt-1.5 flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#8E8E93]" />
+                      {task.user.name || task.clientName || 'Not set'}
+                    </p>
+                    {task.user.email || task.clientEmail ? (
+                      <p className="text-[13px] text-[#8E8E93] mt-1 ml-6">
+                        {task.user.email || task.clientEmail}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Status</label>
+                    <p className="mt-1.5">
+                      <span className={`px-3 py-1 rounded-lg text-[13px] font-semibold ${getStatusColor(task.status)}`}>
+                        {mapStatus(task.status).charAt(0).toUpperCase() + mapStatus(task.status).slice(1)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Google Drive Links */}
+                <div className="pt-3 border-t border-[#007AFF]/30 space-y-2">
+                  {task.googleDriveFolderLink && (
+                    <a
+                      href={task.googleDriveFolderLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-[#007AFF] hover:text-[#0051D5] text-[15px] transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Open Google Drive Folder
+                    </a>
+                  )}
+                  {task.briefDocumentLink && (
+                    <a
+                      href={task.briefDocumentLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-[#007AFF] hover:text-[#0051D5] text-[15px] transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Open Brief Document
+                    </a>
+                  )}
+                  {!task.googleDriveFolderLink && !task.briefDocumentLink && (
+                    <p className="text-[13px] text-[#8E8E93]">Google Drive links not available</p>
+                  )}
+                </div>
+
+                {/* Stats */}
+                <div className="pt-3 border-t border-[#007AFF]/30 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Messages</label>
+                    <p className="text-[15px] text-[#FFFFFF] mt-1.5">{task._count?.messages || task.messages?.length || 0}</p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide">Assets</label>
+                    <p className="text-[15px] text-[#FFFFFF] mt-1.5">{task._count?.assets || task.assets?.length || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages Preview */}
+            {task.messages && task.messages.length > 0 && (
+              <div>
+                <h3 className="text-[17px] font-semibold text-[#FFFFFF] mb-4">Recent Messages</h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {task.messages.slice(-5).map((message) => (
+                    <div
+                      key={message.id}
+                      className="bg-[#2C2C2E] rounded-xl p-4 border border-[#38383A]/30"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-[11px] font-semibold uppercase ${
+                          message.role === 'user' ? 'text-[#007AFF]' : 'text-[#8E8E93]'
+                        }`}>
+                          {message.role === 'user' ? 'Client' : 'Assistant'}
+                        </span>
+                        <span className="text-[11px] text-[#8E8E93]">
+                          {formatDate(message.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-[15px] text-[#FFFFFF] whitespace-pre-wrap">
+                        {message.content.substring(0, 200)}
+                        {message.content.length > 200 ? '...' : ''}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

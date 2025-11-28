@@ -4,7 +4,7 @@ import { OAuth2Client } from 'google-auth-library'
 // Lazy initialization for Google Drive OAuth client
 let driveInstance: ReturnType<typeof google.drive> | null = null
 
-function getDrive() {
+export function getDrive() {
   if (!driveInstance) {
     // Try OAuth first (preferred method)
     const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID
