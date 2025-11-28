@@ -241,6 +241,173 @@ export default function ProductAnalysis() {
     }
   }
 
+  // Parse and render markdown content cleanly
+  const renderBrandGuidelines = (content: string) => {
+    if (!content) return null
+
+    const lines = content.split('\n')
+    const elements: JSX.Element[] = []
+    let currentParagraph: string[] = []
+    let listItems: string[] = []
+    let inList = false
+
+    const flushParagraph = () => {
+      if (currentParagraph.length > 0) {
+        const text = currentParagraph.join(' ').trim()
+        if (text) {
+          // Remove markdown formatting but keep structure
+          const cleanText = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/__(.*?)__/g, '<strong>$1</strong>')
+            .replace(/_(.*?)_/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code class="bg-[#2C2C2E] px-1.5 py-0.5 rounded text-[#007AFF] text-[13px] font-mono">$1</code>')
+          
+          elements.push(
+            <p
+              key={`p-${elements.length}`}
+              className="text-[15px] text-[#FFFFFF] leading-relaxed mb-4"
+              dangerouslySetInnerHTML={{ __html: cleanText }}
+            />
+          )
+        }
+        currentParagraph = []
+      }
+    }
+
+    const flushList = () => {
+      if (listItems.length > 0) {
+        elements.push(
+          <ul key={`ul-${elements.length}`} className="mb-4 space-y-2">
+            {listItems.map((item, idx) => {
+              // Remove markdown formatting
+              const cleanItem = item
+                .replace(/^[-*+]\s+/, '') // Remove list marker
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                .replace(/_(.*?)_/g, '<em>$1</em>')
+              
+              return (
+                <li key={idx} className="flex items-start gap-3">
+                  <span className="text-[#007AFF] mt-1.5 flex-shrink-0">•</span>
+                  <span
+                    className="text-[15px] text-[#FFFFFF] leading-relaxed flex-1"
+                    dangerouslySetInnerHTML={{ __html: cleanItem }}
+                  />
+                </li>
+              )
+            })}
+          </ul>
+        )
+        listItems = []
+        inList = false
+      }
+    }
+
+    lines.forEach((line, index) => {
+      const trimmed = line.trim()
+
+      // Check for headings
+      if (trimmed.startsWith('# ')) {
+        flushParagraph()
+        flushList()
+        const title = trimmed.replace(/^#\s+/, '').replace(/\*\*/g, '').trim()
+        elements.push(
+          <h2 key={`h2-${index}`} className="text-[24px] font-bold text-[#FFFFFF] mb-3 mt-6 first:mt-0">
+            {title}
+          </h2>
+        )
+        return
+      }
+
+      if (trimmed.startsWith('## ')) {
+        flushParagraph()
+        flushList()
+        const title = trimmed.replace(/^##\s+/, '').replace(/\*\*/g, '').trim()
+        elements.push(
+          <h3 key={`h3-${index}`} className="text-[20px] font-bold text-[#FFFFFF] mb-3 mt-5">
+            {title}
+          </h3>
+        )
+        return
+      }
+
+      if (trimmed.startsWith('### ')) {
+        flushParagraph()
+        flushList()
+        const title = trimmed.replace(/^###\s+/, '').replace(/\*\*/g, '').trim()
+        elements.push(
+          <h4 key={`h4-${index}`} className="text-[17px] font-semibold text-[#FFFFFF] mb-2 mt-4">
+            {title}
+          </h4>
+        )
+        return
+      }
+
+      // Check for list items
+      if (trimmed.match(/^[-*+]\s+/)) {
+        flushParagraph()
+        if (!inList) inList = true
+        listItems.push(trimmed)
+        return
+      }
+
+      // Check for numbered list
+      if (trimmed.match(/^\d+[.)]\s+/)) {
+        flushParagraph()
+        flushList()
+        const match = trimmed.match(/^\d+[.)]\s+(.+)$/)
+        if (match) {
+          const cleanText = match[1]
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          
+          elements.push(
+            <div key={`num-${index}`} className="flex items-start gap-3 mb-2">
+              <span className="text-[#007AFF] font-semibold mt-0.5 flex-shrink-0">
+                {trimmed.match(/^\d+/)?.[0]}.
+              </span>
+              <span
+                className="text-[15px] text-[#FFFFFF] leading-relaxed flex-1"
+                dangerouslySetInnerHTML={{ __html: cleanText }}
+              />
+            </div>
+          )
+        }
+        return
+      }
+
+      // Horizontal rule
+      if (trimmed === '---' || trimmed === '***') {
+        flushParagraph()
+        flushList()
+        elements.push(
+          <hr key={`hr-${index}`} className="border-[#38383A]/50 my-6" />
+        )
+        return
+      }
+
+      // Empty line
+      if (trimmed === '') {
+        flushParagraph()
+        flushList()
+        return
+      }
+
+      // Regular paragraph text
+      if (inList) {
+        flushList()
+      }
+      currentParagraph.push(trimmed)
+    })
+
+    flushParagraph()
+    flushList()
+
+    return elements.length > 0 ? <div className="space-y-1">{elements}</div> : null
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -578,11 +745,11 @@ export default function ProductAnalysis() {
                       placeholder="Enter brand guidelines..."
                     />
                   ) : (
-                    <div className="bg-[#2C2C2E] rounded-xl p-4 border border-[#38383A]/30">
+                    <div className="bg-[#2C2C2E] rounded-xl p-6 border border-[#38383A]/30">
                       {selectedProduct.brandGuidelines ? (
-                        <pre className="text-[14px] text-[#FFFFFF] whitespace-pre-wrap font-sans">
-                          {selectedProduct.brandGuidelines}
-                        </pre>
+                        <div className="prose prose-invert max-w-none">
+                          {renderBrandGuidelines(selectedProduct.brandGuidelines)}
+                        </div>
                       ) : (
                         <p className="text-[15px] text-[#8E8E93]">No brand guidelines available</p>
                       )}
@@ -595,37 +762,29 @@ export default function ProductAnalysis() {
               {selectedProduct.status === 'completed' && selectedProduct.analysisData && (
                 <div>
                   <h4 className="text-[17px] font-semibold text-[#FFFFFF] mb-4">Analysis Summary</h4>
-                  <div className="bg-[#2C2C2E] rounded-xl p-4 border border-[#38383A]/30 space-y-3">
+                  <div className="bg-[#2C2C2E] rounded-xl p-6 border border-[#38383A]/30 space-y-5">
                     {selectedProduct.analysisData.brandEssence && (
                       <div>
-                        <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">
-                          Brand Essence
-                        </label>
-                        <p className="text-[15px] text-[#FFFFFF]">{selectedProduct.analysisData.brandEssence}</p>
+                        <h5 className="text-[15px] font-bold text-[#FFFFFF] mb-2">Brand Essence</h5>
+                        <p className="text-[15px] text-[#FFFFFF] leading-relaxed">{selectedProduct.analysisData.brandEssence}</p>
                       </div>
                     )}
                     {selectedProduct.analysisData.targetAudience && (
                       <div>
-                        <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">
-                          Target Audience
-                        </label>
-                        <p className="text-[15px] text-[#FFFFFF]">{selectedProduct.analysisData.targetAudience}</p>
+                        <h5 className="text-[15px] font-bold text-[#FFFFFF] mb-2">Target Audience</h5>
+                        <p className="text-[15px] text-[#FFFFFF] leading-relaxed">{selectedProduct.analysisData.targetAudience}</p>
                       </div>
                     )}
                     {selectedProduct.analysisData.usp && (
                       <div>
-                        <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">
-                          Unique Selling Proposition
-                        </label>
-                        <p className="text-[15px] text-[#FFFFFF]">{selectedProduct.analysisData.usp}</p>
+                        <h5 className="text-[15px] font-bold text-[#FFFFFF] mb-2">Unique Selling Proposition</h5>
+                        <p className="text-[15px] text-[#FFFFFF] leading-relaxed">{selectedProduct.analysisData.usp}</p>
                       </div>
                     )}
                     {selectedProduct.analysisData.voiceAdjectives && (
                       <div>
-                        <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">
-                          Voice Adjectives
-                        </label>
-                        <p className="text-[15px] text-[#FFFFFF]">{selectedProduct.analysisData.voiceAdjectives}</p>
+                        <h5 className="text-[15px] font-bold text-[#FFFFFF] mb-2">Voice Adjectives</h5>
+                        <p className="text-[15px] text-[#FFFFFF] leading-relaxed">{selectedProduct.analysisData.voiceAdjectives}</p>
                       </div>
                     )}
                   </div>
