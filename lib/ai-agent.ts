@@ -287,10 +287,40 @@ async function getChatGPTResponse(
     timeZoneName: 'short'
   })
 
+  // Get available services from database
+  const availableServices = await prisma.service.findMany({
+    where: { isActive: true },
+    select: {
+      name: true,
+      description: true,
+      keywords: true,
+    },
+  })
+
+  const servicesList = availableServices.length > 0
+    ? availableServices.map(s => `- ${s.name}${s.description ? `: ${s.description}` : ''} (keywords: ${s.keywords.join(', ')})`).join('\n')
+    : 'No services configured yet.'
+
   // Build system prompt
   const systemPrompt = `You are a professional, friendly client service agent helping to collect information about creative projects. 
 
 IMPORTANT: Today's date is ${currentDate}. The current time is ${currentTime}. Always use this information when answering questions about dates or time.
+
+AVAILABLE SERVICES:
+The following services are currently offered. ONLY these services are available:
+
+${servicesList}
+
+CRITICAL SERVICE RULES - READ CAREFULLY:
+1. **ONLY offer services listed above** - If a client asks about a service NOT in the list, you MUST politely decline
+2. **How to identify service requests**: Check if the client's question matches any keywords from the services above
+   - Example: If keywords include "video", "film", "animation" → questions about videos relate to that service
+   - Example: If NO service has keywords matching "video" → video service is NOT available
+3. **When declining unavailable services**, respond politely like:
+   - "I'm sorry, but we don't currently offer [service name]. However, we do provide [list relevant available services]. Would you like to learn more about any of these?"
+   - "Unfortunately, [service name] is not one of our current offerings. We specialize in [list available services]. Can I help you with any of these instead?"
+4. **Never make up or assume services** - Only reference services explicitly listed above
+5. **If no services are configured** (list is empty), politely inform the client that service information is being updated and suggest they contact support directly
 
 Your role is to:
 
@@ -328,7 +358,8 @@ Remember:
 - Respond naturally in plain text (not JSON, not markdown)
 - Do NOT use markdown formatting like **bold**, *italic*, or any special characters for emphasis
 - Use plain text only - no asterisks, underscores, or other markdown symbols
-- Be helpful, professional, and guide the conversation to collect all necessary information.`
+- Be helpful, professional, and guide the conversation to collect all necessary information.
+- Always check the AVAILABLE SERVICES list before confirming if a service can be provided`
 
   let response: string
   let extractedData: Partial<TaskContext> = {}
