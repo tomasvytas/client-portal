@@ -418,25 +418,25 @@ export default function ProductAnalysis() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-[24px] font-semibold text-[#FFFFFF] mb-2">Product Analysis</h2>
-          <p className="text-[15px] text-[#8E8E93]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+        <div className="flex-1">
+          <h2 className="text-[20px] sm:text-[24px] font-semibold text-[#FFFFFF] mb-2">Product Analysis</h2>
+          <p className="text-[14px] sm:text-[15px] text-[#8E8E93]">
             Analyze your product or brand website to generate comprehensive brand guidelines. The AI will understand your product better when you mention it in chat.
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-6 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[15px] font-semibold"
+          className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[14px] sm:text-[15px] font-semibold w-full sm:w-auto"
         >
-          <Search className="w-5 h-5" />
+          <Search className="w-4 h-4 sm:w-5 sm:h-5" />
           Analyze Product
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30 mb-6">
-          <h3 className="text-[20px] font-semibold text-[#FFFFFF] mb-4">New Product Analysis</h3>
+        <div className="bg-[#1C1C1E] rounded-2xl p-4 sm:p-6 border border-[#38383A]/30 mb-6">
+          <h3 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF] mb-4">New Product Analysis</h3>
           <form onSubmit={handleAnalyze} className="space-y-4">
             <div>
               <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
@@ -599,24 +599,24 @@ export default function ProductAnalysis() {
 
       {/* Product Detail Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 bg-[#000000]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[#000000]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
           <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/50 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-[#38383A]/30">
-              <div className="flex items-center gap-3">
-                <h3 className="text-[20px] font-semibold text-[#FFFFFF]">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-[#38383A]/30 gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <h3 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF] truncate">
                   {isEditing ? 'Edit Product' : 'Product Details'}
                 </h3>
                 <span
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[13px] font-semibold ${getStatusColor(
+                  className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-lg text-[12px] sm:text-[13px] font-semibold flex-shrink-0 ${getStatusColor(
                     selectedProduct.status
                   )}`}
                 >
                   {getStatusIcon(selectedProduct.status)}
-                  {selectedProduct.status.charAt(0).toUpperCase() + selectedProduct.status.slice(1)}
+                  <span className="hidden sm:inline">{selectedProduct.status.charAt(0).toUpperCase() + selectedProduct.status.slice(1)}</span>
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                 {!isEditing && selectedProduct.status === 'completed' && (
                   <button
                     onClick={() => setIsEditing(true)}
@@ -668,10 +668,10 @@ export default function ProductAnalysis() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
               {/* Basic Information */}
               <div>
-                <h4 className="text-[17px] font-semibold text-[#FFFFFF] mb-4">Basic Information</h4>
+                <h4 className="text-[16px] sm:text-[17px] font-semibold text-[#FFFFFF] mb-3 sm:mb-4">Basic Information</h4>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">

@@ -232,28 +232,28 @@ export default function ChatInterface({
   return (
     <div className="flex flex-col h-screen bg-[#000000]">
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-[#38383A]/50 px-6 py-4 backdrop-blur-xl bg-opacity-80">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-5">
+      <div className="bg-[#1C1C1E] border-b border-[#38383A]/50 px-4 sm:px-6 py-4 backdrop-blur-xl bg-opacity-80">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1">
             <button
               onClick={() => router.push('/')}
-              className="p-2.5 hover:bg-[#2C2C2E] rounded-xl transition-all duration-200 active:scale-95"
+              className="p-2.5 hover:bg-[#2C2C2E] rounded-xl transition-all duration-200 active:scale-95 flex-shrink-0"
             >
               <ArrowLeft className="w-5 h-5 text-[#FFFFFF]" />
             </button>
-            <div>
-              <h1 className="text-[20px] font-semibold text-[#FFFFFF] leading-tight tracking-tight">
+            <div className="min-w-0">
+              <h1 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF] leading-tight tracking-tight truncate">
                 {initialTask.productName || initialTask.title || 'Task Chat'}
               </h1>
               {initialTask.productName && initialTask.title && initialTask.title !== initialTask.productName && (
-                <p className="text-[15px] text-[#8E8E93] mt-0.5">{initialTask.title}</p>
+                <p className="text-[13px] sm:text-[15px] text-[#8E8E93] mt-0.5 truncate">{initialTask.title}</p>
               )}
             </div>
           </div>
           {initialTask.estimatedPrice && (
-              <div className="text-right">
-              <div className="text-[13px] text-[#8E8E93] font-medium mb-1">Estimated Price</div>
-              <div className="text-[20px] font-semibold text-[#30D158]">
+              <div className="text-right flex-shrink-0">
+              <div className="text-[12px] sm:text-[13px] text-[#8E8E93] font-medium mb-1">Price</div>
+              <div className="text-[16px] sm:text-[20px] font-semibold text-[#30D158]">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'EUR',
@@ -265,8 +265,8 @@ export default function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-8">
-        <div className="max-w-4xl mx-auto space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-5">
           {messages.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-[#FFFFFF] text-[17px] font-medium mb-2">Start a conversation</p>
@@ -283,7 +283,7 @@ export default function ChatInterface({
                 }`}
               >
                 <div
-                  className={`max-w-[78%] rounded-2xl px-5 py-3.5 ${
+                  className={`max-w-[85%] sm:max-w-[78%] rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 ${
                     message.role === 'user'
                       ? 'bg-[#007AFF] text-[#FFFFFF]'
                       : 'bg-[#1C1C1E] text-[#FFFFFF] border border-[#38383A]/30'
@@ -297,24 +297,36 @@ export default function ChatInterface({
                   {message.images && message.images.length > 0 && (
                     <div className="mb-3 flex flex-wrap gap-2">
                       {message.images.map((imageUrl, idx) => (
-                        <img
-                          key={idx}
-                          src={imageUrl}
-                          alt={`Attachment ${idx + 1}`}
-                          className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-[#38383A]/30"
-                          onClick={() => window.open(imageUrl, '_blank')}
-                          style={{ cursor: 'pointer' }}
-                        />
+                        <div key={idx} className="relative group">
+                          <img
+                            src={imageUrl}
+                            alt={`Image ${idx + 1}`}
+                            className="max-w-[150px] sm:max-w-[200px] max-h-[150px] sm:max-h-[200px] rounded-xl object-cover border border-[#38383A]/30 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(imageUrl, '_blank')}
+                            onError={(e) => {
+                              // If image fails to load, show a placeholder
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                              const parent = target.parentElement
+                              if (parent && !parent.querySelector('.image-error')) {
+                                const errorDiv = document.createElement('div')
+                                errorDiv.className = 'image-error max-w-[150px] sm:max-w-[200px] max-h-[150px] sm:max-h-[200px] rounded-xl border border-[#38383A]/30 bg-[#2C2C2E] flex items-center justify-center p-4'
+                                errorDiv.innerHTML = `<span class="text-[#8E8E93] text-[13px]">Image ${idx + 1}</span>`
+                                parent.appendChild(errorDiv)
+                              }
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
                   {message.content && (
-                    <p className="whitespace-pre-wrap break-words text-[17px] leading-[1.47] font-normal">
+                    <p className="whitespace-pre-wrap break-words text-[15px] sm:text-[17px] leading-[1.47] font-normal">
                       {message.content}
                     </p>
                   )}
                   <p
-                    className={`text-[13px] mt-2.5 ${
+                    className={`text-[12px] sm:text-[13px] mt-2.5 ${
                       message.role === 'user'
                         ? 'text-[#FFFFFF]/60'
                         : 'text-[#8E8E93]'
@@ -395,9 +407,9 @@ export default function ChatInterface({
       )}
 
       {/* Input */}
-      <div className="bg-[#1C1C1E] border-t border-[#38383A]/50 px-6 py-5 backdrop-blur-xl bg-opacity-80">
+      <div className="bg-[#1C1C1E] border-t border-[#38383A]/50 px-4 sm:px-6 py-4 sm:py-5 backdrop-blur-xl bg-opacity-80">
         <form onSubmit={handleSend} className="max-w-4xl mx-auto">
-          <div className="flex gap-3 items-end">
+          <div className="flex gap-2 sm:gap-3 items-end">
             <input
               type="file"
               ref={fileInputRef}
@@ -419,9 +431,9 @@ export default function ChatInterface({
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Type your message... (Shift+Enter for new line)"
+              placeholder="Type your message..."
               rows={1}
-              className="flex-1 px-5 py-3.5 bg-[#2C2C2E] border border-[#38383A] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[17px] text-[#FFFFFF] placeholder:text-[#8E8E93] font-normal transition-all duration-200 disabled:opacity-50 resize-none overflow-hidden min-h-[52px] max-h-[200px] leading-[1.47]"
+              className="flex-1 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#2C2C2E] border border-[#38383A] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 text-[15px] sm:text-[17px] text-[#FFFFFF] placeholder:text-[#8E8E93] font-normal transition-all duration-200 disabled:opacity-50 resize-none overflow-hidden min-h-[48px] sm:min-h-[52px] max-h-[200px] leading-[1.47]"
               disabled={loading}
               style={{ height: 'auto' }}
             />

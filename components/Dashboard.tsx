@@ -109,7 +109,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#000000]">
       <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Image
@@ -117,22 +117,23 @@ export default function Dashboard() {
                 alt="Task Chat"
                 width={120}
                 height={40}
-                className="object-contain"
+                className="object-contain w-24 sm:w-[120px]"
                 priority
               />
             </div>
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3 sm:gap-5">
               {isAdmin && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="text-[15px] text-[#007AFF] hover:text-[#0051D5] font-medium transition-colors"
+                  className="text-[13px] sm:text-[15px] text-[#007AFF] hover:text-[#0051D5] font-medium transition-colors"
                 >
-                  Admin Panel
+                  <span className="hidden sm:inline">Admin Panel</span>
+                  <span className="sm:hidden">Admin</span>
                 </button>
               )}
               <button
                 onClick={() => signOut()}
-                className="text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
+                className="text-[13px] sm:text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
               >
                 Sign Out
               </button>
@@ -141,23 +142,23 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-[28px] font-bold text-[#FFFFFF] tracking-tight">Your Tasks</h2>
-          <div className="flex gap-3">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <h2 className="text-[24px] sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight">Your Tasks</h2>
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => router.push('/products')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#2C2C2E] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#38383A] transition-all duration-200 active:scale-95"
+              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#2C2C2E] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#38383A] transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
             >
-              <Package className="w-5 h-5" />
-              Products
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Products</span>
             </button>
             <button
               onClick={createNewTask}
               disabled={creating}
-              className="px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
             >
-              {creating ? 'Creating...' : '+ New Task Chat'}
+              {creating ? 'Creating...' : <><span className="hidden sm:inline">+ New Task Chat</span><span className="sm:hidden">+ New</span></>}
             </button>
           </div>
         </div>
@@ -174,25 +175,25 @@ export default function Dashboard() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {tasks.map((task) => (
               <div
                 key={task.id}
                 onClick={() => router.push(`/tasks/${task.id}`)}
-                className="bg-[#1C1C1E] rounded-2xl p-6 cursor-pointer hover:bg-[#2C2C2E] border border-[#38383A]/30 transition-all duration-200 active:scale-[0.98]"
+                className="bg-[#1C1C1E] rounded-2xl p-4 sm:p-6 cursor-pointer hover:bg-[#2C2C2E] border border-[#38383A]/30 transition-all duration-200 active:scale-[0.98]"
                 style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-[17px] font-semibold text-[#FFFFFF] leading-tight flex-1 pr-2">
+                <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
+                  <h3 className="text-[15px] sm:text-[17px] font-semibold text-[#FFFFFF] leading-tight flex-1 min-w-0">
                     {task.productName || task.title || 'Untitled Task'}
                   </h3>
                   <span
-                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg uppercase tracking-wide ${
-                      task.status === 'completed'
+                    className={`px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold rounded-lg uppercase tracking-wide flex-shrink-0 ${
+                      task.status === 'completed' || task.status === 'done'
                         ? 'bg-[#30D158]/20 text-[#30D158]'
-                        : task.status === 'in_progress'
+                        : task.status === 'in_progress' || task.status === 'started'
                         ? 'bg-[#007AFF]/20 text-[#007AFF]'
-                        : task.status === 'cancelled'
+                        : task.status === 'cancelled' || task.status === 'archive'
                         ? 'bg-[#FF3B30]/20 text-[#FF3B30]'
                         : 'bg-[#8E8E93]/20 text-[#8E8E93]'
                     }`}
@@ -202,36 +203,36 @@ export default function Dashboard() {
                 </div>
 
                 {task.productName && task.title && task.title !== task.productName && (
-                  <p className="text-[15px] text-[#8E8E93] mb-3">
+                  <p className="text-[14px] sm:text-[15px] text-[#8E8E93] mb-2 sm:mb-3">
                     {task.title}
                   </p>
                 )}
 
                 {task.clientName && (
-                  <p className="text-[15px] text-[#8E8E93] mb-3">
+                  <p className="text-[14px] sm:text-[15px] text-[#8E8E93] mb-2 sm:mb-3">
                     Client: {task.clientName}
                   </p>
                 )}
 
-                <div className="flex justify-between items-center mt-5 pt-4 border-t border-[#38383A]/30">
-                  <div className="text-[13px] text-[#8E8E93]">
+                <div className="flex justify-between items-center mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-[#38383A]/30">
+                  <div className="text-[12px] sm:text-[13px] text-[#8E8E93]">
                     {task.messages.length > 0
-                      ? `${task.messages.length} messages`
+                      ? `${task.messages.length} message${task.messages.length !== 1 ? 's' : ''}`
                       : 'No messages yet'}
                   </div>
-                  <div className="text-[13px] text-[#8E8E93]">
+                  <div className="text-[12px] sm:text-[13px] text-[#8E8E93]">
                     {formatDate(task.updatedAt)}
                   </div>
                 </div>
 
                 {task.estimatedPrice && (
-                  <div className="mt-3 text-[15px] font-semibold text-[#30D158]">
+                  <div className="mt-2 sm:mt-3 text-[14px] sm:text-[15px] font-semibold text-[#30D158]">
                     {formatPrice(task.estimatedPrice)}
                   </div>
                 )}
 
                 {task.assets.length > 0 && (
-                  <div className="mt-2 text-[13px] text-[#8E8E93]">
+                  <div className="mt-2 text-[12px] sm:text-[13px] text-[#8E8E93]">
                     {task.assets.length} asset{task.assets.length !== 1 ? 's' : ''}
                   </div>
                 )}

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase } from 'lucide-react'
 import PricingManagement from './PricingManagement'
-import TaskBoard from './TaskBoard'
+import TaskTable from './TaskTable'
 import ServicesManagement from './ServicesManagement'
 
 type Tab = 'board' | 'pricing' | 'services' | 'settings'
@@ -99,19 +99,20 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#000000]">
       {/* Header */}
       <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-[20px] font-semibold text-[#FFFFFF]">Admin Panel</h1>
-            <div className="flex items-center gap-5">
+            <h1 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF]">Admin Panel</h1>
+            <div className="flex items-center gap-3 sm:gap-5">
               <button
                 onClick={() => router.push('/')}
-                className="text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
+                className="text-[13px] sm:text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
               >
-                Client Portal
+                <span className="hidden sm:inline">Client Portal</span>
+                <span className="sm:hidden">Portal</span>
               </button>
               <button
                 onClick={() => signOut()}
-                className="text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
+                className="text-[13px] sm:text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
               >
                 Sign Out
               </button>
@@ -122,18 +123,19 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <div className="bg-[#1C1C1E] border-b border-[#38383A]/50">
-        <div className="max-w-7xl mx-auto px-6">
-          <nav className="flex space-x-8" aria-label="Tabs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <nav className="flex space-x-4 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('board')}
               className={`${
                 activeTab === 'board'
                   ? 'border-[#007AFF] text-[#007AFF]'
                   : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
-              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
             >
-              <LayoutGrid className="w-5 h-5" />
-              Task Board
+              <LayoutGrid className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Task Board</span>
+              <span className="sm:hidden">Tasks</span>
             </button>
             <button
               onClick={() => setActiveTab('pricing')}
@@ -141,9 +143,9 @@ export default function AdminDashboard() {
                 activeTab === 'pricing'
                   ? 'border-[#007AFF] text-[#007AFF]'
                   : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
-              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
             >
-              <DollarSign className="w-5 h-5" />
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
               Pricing
             </button>
             <button
@@ -152,9 +154,9 @@ export default function AdminDashboard() {
                 activeTab === 'services'
                   ? 'border-[#007AFF] text-[#007AFF]'
                   : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
-              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
             >
-              <Briefcase className="w-5 h-5" />
+              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
               Services
             </button>
             <button
@@ -163,9 +165,9 @@ export default function AdminDashboard() {
                 activeTab === 'settings'
                   ? 'border-[#007AFF] text-[#007AFF]'
                   : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
-              } flex items-center gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[15px] transition-colors`}
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
               Settings
             </button>
           </nav>
@@ -173,8 +175,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {activeTab === 'board' && <TaskBoard />}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {activeTab === 'board' && <TaskTable />}
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'services' && <ServicesManagement />}
         {activeTab === 'settings' && (
