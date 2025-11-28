@@ -171,7 +171,7 @@ async function getGeminiResponse(
 ): Promise<{ response: string; extractedData?: Partial<TaskContext> }> {
   try {
     const gemini = getGemini()
-    const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
 
     // Fetch images and convert to base64
     const imageParts = await Promise.all(

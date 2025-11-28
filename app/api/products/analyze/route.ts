@@ -105,8 +105,8 @@ async function analyzeProduct(
 
     // Generate brand guidelines using Gemini (same prompt as n8n workflow)
     const gemini = getGemini()
-    // Use gemini-1.5-flash for faster responses, or gemini-1.5-pro for better quality
-    const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Use gemini-1.5-flash-latest for faster responses, or gemini-1.5-pro-latest for better quality
+    const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
 
     const prompt = `# ROLE AND GOAL
 You are an expert Brand Strategist and Marketing Analyst. Your task is to analyze the provided scraped website content from a company or product and synthesize it into a comprehensive Brand Guidelines document. This document's primary purpose is to serve as the foundational context for an AI-powered advertising system. Therefore, your analysis must be sharp, marketing-focused, and extract actionable insights for creating compelling, on-brand ad copy.
