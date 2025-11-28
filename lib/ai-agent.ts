@@ -417,15 +417,29 @@ Current information collected:
 - Budget: ${context.estimatedPrice ? `€${context.estimatedPrice}` : 'NOT SET - This is critical, ask about budget'}
 - Assets: ${hasAssets ? `${context.assets!.length} file(s) uploaded` : 'None'}
 
-${missingInfo.length > 0 ? `Still need to collect: ${missingInfo.join(', ')}` : context.estimatedPrice ? 'All basic information collected. You can ask for more details to complete the brief.' : 'IMPORTANT: Budget is missing. Ask about the client\'s budget range before considering the brief complete.'}
+${missingInfo.length > 0 ? `Still need to collect: ${missingInfo.join(', ')}` : context.estimatedPrice ? 'CRITICAL: All basic information has been collected. You MUST now provide a confirmation summary and ask the client to confirm everything is correct.' : 'IMPORTANT: Budget is missing. Ask about the client\'s budget range before considering the brief complete.'}
 ${productsInfo}
+
+CONFIRMATION STEP - READ CAREFULLY:
+When all basic information is collected (product name, description, deadline, and budget), you MUST:
+1. Provide a clear summary of the entire task, including:
+   - Product/Service name
+   - Detailed description of what needs to be done
+   - Deadline/timeline
+   - Budget/Estimated price
+   - Any other key details discussed
+2. Ask the client to confirm: "Does this look correct? Is there anything else you'd like to add or change?"
+3. Wait for the client's confirmation before considering the brief complete
+4. If the client confirms, acknowledge and let them know the brief will be prepared
+5. If the client wants to add or change something, update accordingly and confirm again
 
 Remember: 
 - Respond naturally in plain text (not JSON, not markdown)
 - Do NOT use markdown formatting like **bold**, *italic*, or any special characters for emphasis
 - Use plain text only - no asterisks, underscores, or other markdown symbols
 - Be helpful, professional, and guide the conversation to collect all necessary information.
-- Always check the AVAILABLE SERVICES list before confirming if a service can be provided`
+- Always check the AVAILABLE SERVICES list before confirming if a service can be provided
+- When all information is collected, ALWAYS provide a confirmation summary before proceeding`
 
   let response: string
   let extractedData: Partial<TaskContext> = {}

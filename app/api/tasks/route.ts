@@ -58,20 +58,52 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create welcome message
+    // Create welcome message with fun Kato greeting (randomized variations)
+    const katoGreetings = [
+      `Heyoo! I'm Kato — Tomas's AI sidekick.
+
+My mission? Collect every task, idea, and chaotic brainwave you've got.
+
+Don't hold back. I've seen some of Tomas's ideas... trust me, yours can't be worse.
+
+So... What's the product?`,
+      `Hey there! Kato here — Tomas's AI assistant (and occasional sanity checker).
+
+Ready to turn your wild ideas into actual projects? Let's do this.
+
+I've heard everything from "make it pop" to "just make it work" — so don't worry about being too specific. Or too vague. I've seen it all.
+
+What product are we working with?`,
+      `Yo! Kato speaking — Tomas's digital sidekick.
+
+I'm here to gather all the details, deadlines, and delightful chaos that comes with creative projects.
+
+Pro tip: The more you tell me, the better I can help. And yes, I've definitely heard weirder requests than whatever you're about to say.
+
+So, what's the product?`,
+      `Heyoo! Kato here — Tomas's AI assistant.
+
+My job? Turn your ideas into organized, actionable briefs. Your job? Tell me everything.
+
+I won't judge. I've seen Tomas's notes... trust me, I've seen worse.
+
+What product are we building?`,
+      `Hello! I'm Kato — Tomas's AI sidekick.
+
+Ready to turn your project ideas into reality? Let's start by getting all the details.
+
+Don't worry about being too detailed or too brief — I'll figure it out. I've handled everything from "make it awesome" to 50-page specifications.
+
+What's the product?`,
+    ]
+    
+    const randomGreeting = katoGreetings[Math.floor(Math.random() * katoGreetings.length)]
+    
     await prisma.message.create({
       data: {
         taskId: task.id,
         role: 'assistant',
-        content: `Hello! 👋 I'm here to help you create a new project. Let's start by gathering some information:
-
-1. **What product or service** are you looking to have work done on?
-2. **What type of project** is this? (e.g., video production, graphic design, web development, social media content, etc.)
-3. **When do you need this completed?** (deadline/timeline)
-
-Feel free to share as much detail as you'd like, and I'll help organize everything. You can also upload any assets or reference materials using the paperclip icon.
-
-If you'd like to know about pricing, just ask! I can provide estimates based on your project details.`,
+        content: randomGreeting,
       },
     })
 
