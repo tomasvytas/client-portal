@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Loader2, CheckCircle, XCircle, ExternalLink, FileText } from 'lucide-react'
+import { Search, Loader2, CheckCircle, XCircle, ExternalLink, FileText, Trash2 } from 'lucide-react'
 
 interface Product {
   id: string
@@ -18,6 +18,7 @@ export default function ProductAnalysis() {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     websiteUrl: '',
     productName: '',
@@ -86,6 +87,46 @@ export default function ProductAnalysis() {
     } finally {
       setAnalyzing(false)
     }
+  }
+
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return
+    }
+
+    setDeletingId(productId)
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        fetchProducts() // Refresh list
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to delete product')
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Failed to delete product')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const getAnalysisProgress = (product: Product) => {
+    if (product.status !== 'analyzing' && product.status !== 'pending') {
+      return null
+    }
+
+    // Calculate approximate progress based on time elapsed
+    const createdAt = new Date(product.createdAt).getTime()
+    const now = Date.now()
+    const elapsed = now - createdAt
+    const estimatedTotal = 120000 // 2 minutes estimated
+    const progress = Math.min(95, Math.floor((elapsed / estimatedTotal) * 100))
+
+    return progress
   }
 
   const formatDate = (dateString: string) => {
@@ -229,49 +270,85 @@ export default function ProductAnalysis() {
           </div>
         ) : (
           <div className="divide-y divide-[#38383A]/30">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="p-6 hover:bg-[#2C2C2E]/50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-[17px] font-semibold text-[#FFFFFF]">
-                        {product.name}
-                      </h3>
-                      <span
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[13px] font-semibold ${getStatusColor(
-                          product.status
-                        )}`}
-                      >
-                        {getStatusIcon(product.status)}
-                        {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
-                      </span>
-                    </div>
-                    {product.productType && (
-                      <p className="text-[15px] text-[#8E8E93] mb-2">
-                        Type: {product.productType}
+            {products.map((product) => {
+              const progress = getAnalysisProgress(product)
+              const isDeleting = deletingId === product.id
+
+              return (
+                <div
+                  key={product.id}
+                  className="p-6 hover:bg-[#2C2C2E]/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-[17px] font-semibold text-[#FFFFFF]">
+                          {product.name}
+                        </h3>
+                        <span
+                          className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[13px] font-semibold ${getStatusColor(
+                            product.status
+                          )}`}
+                        >
+                          {getStatusIcon(product.status)}
+                          {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                        </span>
+                      </div>
+                      
+                      {/* Progress Bar for Analyzing Status */}
+                      {(product.status === 'analyzing' || product.status === 'pending') && progress !== null && (
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[13px] text-[#8E8E93]">Analyzing...</span>
+                            <span className="text-[13px] text-[#8E8E93]">{progress}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-[#2C2C2E] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#007AFF] rounded-full transition-all duration-500 ease-out"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {product.productType && (
+                        <p className="text-[15px] text-[#8E8E93] mb-2">
+                          Type: {product.productType}
+                        </p>
+                      )}
+                      {product.websiteUrl && (
+                        <a
+                          href={product.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-[#007AFF] hover:text-[#0051D5] text-[14px] transition-colors mb-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span className="truncate">{product.websiteUrl}</span>
+                        </a>
+                      )}
+                      <p className="text-[13px] text-[#8E8E93] mt-3">
+                        Created: {formatDate(product.createdAt)}
                       </p>
-                    )}
-                    {product.websiteUrl && (
-                      <a
-                        href={product.websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-[#007AFF] hover:text-[#0051D5] text-[14px] transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        {product.websiteUrl}
-                      </a>
-                    )}
-                    <p className="text-[13px] text-[#8E8E93] mt-3">
-                      Created: {formatDate(product.createdAt)}
-                    </p>
+                    </div>
+                    
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      disabled={isDeleting}
+                      className="flex-shrink-0 p-2 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Delete product"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
+                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
