@@ -27,6 +27,19 @@ export default function ProductAnalysis() {
     fetchProducts()
   }, [])
 
+  // Poll for updates if there are products in analyzing state
+  useEffect(() => {
+    const hasAnalyzing = products.some(p => p.status === 'analyzing' || p.status === 'pending')
+    
+    if (hasAnalyzing) {
+      const interval = setInterval(() => {
+        fetchProducts()
+      }, 5000) // Poll every 5 seconds
+      
+      return () => clearInterval(interval)
+    }
+  }, [products])
+
   const fetchProducts = async () => {
     try {
       const res = await fetch('/api/products')

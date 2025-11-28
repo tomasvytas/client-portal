@@ -105,7 +105,8 @@ async function analyzeProduct(
 
     // Generate brand guidelines using Gemini (same prompt as n8n workflow)
     const gemini = getGemini()
-    const model = gemini.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    // Use gemini-1.5-flash for faster responses, or gemini-1.5-pro for better quality
+    const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
     const prompt = `# ROLE AND GOAL
 You are an expert Brand Strategist and Marketing Analyst. Your task is to analyze the provided scraped website content from a company or product and synthesize it into a comprehensive Brand Guidelines document. This document's primary purpose is to serve as the foundational context for an AI-powered advertising system. Therefore, your analysis must be sharp, marketing-focused, and extract actionable insights for creating compelling, on-brand ad copy.
@@ -166,9 +167,11 @@ Here is the scraped website content. Analyze it and generate the brand guideline
 
 ${websiteContent}`
 
+    console.log('Starting Gemini analysis for product:', productId)
     const result = await model.generateContent(prompt)
     const response = result.response
     const brandGuidelines = response.text()
+    console.log('Gemini analysis completed, length:', brandGuidelines.length)
 
     // Extract product type from the analysis (try to infer from content)
     const productTypeMatch = brandGuidelines.match(/Product:\s*\[([^\]]+)\]/i)
@@ -198,9 +201,23 @@ ${websiteContent}`
     console.log('Product analysis completed:', productId)
   } catch (error: any) {
     console.error('Error in product analysis:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      productId,
+      websiteUrl,
+    })
+    
+    // Update product status to failed with error details
     await prisma.product.update({
       where: { id: productId },
-      data: { status: 'failed' },
+      data: { 
+        status: 'failed',
+        analysisData: {
+          error: error?.message || 'Unknown error occurred',
+          timestamp: new Date().toISOString(),
+        },
+      },
     })
     throw error
   }
