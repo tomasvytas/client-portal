@@ -18,6 +18,8 @@ export default function AdminDashboard() {
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
   const [driveAuthError, setDriveAuthError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+  const [migrationResult, setMigrationResult] = useState<{ success: boolean; message: string } | null>(null)
 
   // Check for auth callback results
   useEffect(() => {
@@ -57,6 +59,39 @@ export default function AdminDashboard() {
       navigator.clipboard.writeText(refreshToken)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleRunMigration = async () => {
+    if (!confirm('This will run database migrations. Continue?')) return
+
+    setMigrating(true)
+    setMigrationResult(null)
+
+    try {
+      const res = await fetch('/api/admin/migrate', {
+        method: 'POST',
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        setMigrationResult({
+          success: true,
+          message: data.message || 'Migration completed successfully',
+        })
+      } else {
+        setMigrationResult({
+          success: false,
+          message: data.error || 'Migration failed',
+        })
+      }
+    } catch (error: any) {
+      setMigrationResult({
+        success: false,
+        message: error?.message || 'Failed to run migration',
+      })
+    } finally {
+      setMigrating(false)
     }
   }
 
@@ -204,6 +239,51 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Database Migration */}
+            <div className="pt-8 border-t border-[#38383A]/30">
+              <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Database Migration</h3>
+              <p className="text-[14px] text-[#8E8E93] mb-4">
+                Run database migrations to create or update tables. This is needed when new features require database schema changes.
+              </p>
+              
+              {migrationResult && (
+                <div className={`mb-4 p-4 rounded-xl flex items-start gap-3 ${
+                  migrationResult.success
+                    ? 'bg-[#34C759]/10 border border-[#34C759]/30'
+                    : 'bg-[#FF3B30]/10 border border-[#FF3B30]/30'
+                }`}>
+                  {migrationResult.success ? (
+                    <CheckCircle className="w-5 h-5 text-[#34C759] flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-[#FF3B30] flex-shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <p className={`text-[15px] font-semibold mb-1 ${
+                      migrationResult.success ? 'text-[#34C759]' : 'text-[#FF3B30]'
+                    }`}>
+                      {migrationResult.success ? 'Migration Successful' : 'Migration Failed'}
+                    </p>
+                    <p className="text-[14px] text-[#8E8E93]">{migrationResult.message}</p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleRunMigration}
+                disabled={migrating}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[15px] font-semibold"
+              >
+                {migrating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Running Migration...
+                  </>
+                ) : (
+                  'Run Database Migration'
+                )}
+              </button>
             </div>
           </div>
         )}
