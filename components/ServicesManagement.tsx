@@ -16,7 +16,12 @@ export default function ServicesManagement() {
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState<Partial<Service> & { description: string; keywords: string }>({
+  const [formData, setFormData] = useState<{
+    name: string
+    description: string
+    keywords: string // Store as string for input, convert to array on submit
+    isActive: boolean
+  }>({
     name: '',
     description: '',
     keywords: '',
