@@ -287,15 +287,22 @@ async function getChatGPTResponse(
     timeZoneName: 'short'
   })
 
-  // Get available services from database
-  const availableServices = await prisma.service.findMany({
-    where: { isActive: true },
-    select: {
-      name: true,
-      description: true,
-      keywords: true,
-    },
-  })
+  // Get available services from database (handle case where Service model might not exist yet)
+  let availableServices: Array<{ name: string; description: string | null; keywords: string[] }> = []
+  try {
+    availableServices = await prisma.service.findMany({
+      where: { isActive: true },
+      select: {
+        name: true,
+        description: true,
+        keywords: true,
+      },
+    })
+  } catch (error: any) {
+    // Service model might not be migrated yet, continue without services
+    console.warn('Could not fetch services:', error?.message)
+    availableServices = []
+  }
 
   const servicesList = availableServices.length > 0
     ? availableServices.map(s => `- ${s.name}${s.description ? `: ${s.description}` : ''} (keywords: ${s.keywords.join(', ')})`).join('\n')
