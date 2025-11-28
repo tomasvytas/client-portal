@@ -401,6 +401,7 @@ Current information collected:
 - Estimated Price: ${context.estimatedPrice ? `€${context.estimatedPrice}` : 'Not set'}
 
 ${missingInfo.length > 0 ? `Still need to collect: ${missingInfo.join(', ')}` : 'All basic information collected. You can ask for more details or provide pricing.'}
+${productsInfo}
 
 Remember: 
 - Respond naturally in plain text (not JSON, not markdown)
