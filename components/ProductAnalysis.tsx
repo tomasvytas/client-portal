@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { Search, Loader2, CheckCircle, XCircle, ExternalLink, FileText, Trash2, X, Edit, Save } from 'lucide-react'
 
 interface Product {
@@ -246,7 +246,7 @@ export default function ProductAnalysis() {
     if (!content) return null
 
     const lines = content.split('\n')
-    const elements: JSX.Element[] = []
+    const elements: ReactElement[] = []
     let currentParagraph: string[] = []
     let listItems: string[] = []
     let inList = false
