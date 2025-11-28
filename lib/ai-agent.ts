@@ -1,8 +1,10 @@
 import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { prisma } from './prisma'
 
 // Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
 let openaiInstance: OpenAI | null = null
+let geminiInstance: GoogleGenerativeAI | null = null
 
 function getOpenAI(): OpenAI {
   if (!openaiInstance) {
@@ -17,6 +19,17 @@ function getOpenAI(): OpenAI {
   return openaiInstance
 }
 
+function getGemini(): GoogleGenerativeAI {
+  if (!geminiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      throw new Error('Missing credentials. Please set the GEMINI_API_KEY environment variable.')
+    }
+    geminiInstance = new GoogleGenerativeAI(apiKey)
+  }
+  return geminiInstance
+}
+
 export interface TaskContext {
   taskId: string
   clientName?: string
@@ -27,6 +40,7 @@ export interface TaskContext {
   estimatedPrice?: number
   assets?: Array<{ filename: string; url: string }>
   previousMessages?: Array<{ role: string; content: string }>
+  imageUrls?: string[] // URLs of images in the current message
 }
 
 // Determine what information is still needed
@@ -131,7 +145,113 @@ function parseRelativeDate(dateString: string): string | null {
   return null
 }
 
+/**
+ * Get AI response using Gemini for image analysis or ChatGPT for text
+ */
 export async function getAIResponse(
+  userMessage: string,
+  context: TaskContext
+): Promise<{ response: string; extractedData?: Partial<TaskContext> }> {
+  // If images are present, use Gemini for image analysis
+  if (context.imageUrls && context.imageUrls.length > 0) {
+    return getGeminiResponse(userMessage, context)
+  }
+  
+  // Otherwise, use ChatGPT for regular text conversations
+  return getChatGPTResponse(userMessage, context)
+}
+
+/**
+ * Get response from Gemini (for image analysis)
+ */
+async function getGeminiResponse(
+  userMessage: string,
+  context: TaskContext
+): Promise<{ response: string; extractedData?: Partial<TaskContext> }> {
+  try {
+    const gemini = getGemini()
+    const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+    // Fetch images and convert to base64
+    const imageParts = await Promise.all(
+      (context.imageUrls || []).map(async (url) => {
+        try {
+          const response = await fetch(url)
+          const arrayBuffer = await response.arrayBuffer()
+          const buffer = Buffer.from(arrayBuffer)
+          const base64 = buffer.toString('base64')
+          
+          // Determine MIME type from URL or default to image/jpeg
+          let mimeType = 'image/jpeg'
+          if (url.includes('.png')) mimeType = 'image/png'
+          else if (url.includes('.gif')) mimeType = 'image/gif'
+          else if (url.includes('.webp')) mimeType = 'image/webp'
+          
+          return {
+            inlineData: {
+              data: base64,
+              mimeType,
+            },
+          }
+        } catch (error) {
+          console.error('Error fetching image:', error)
+          return null
+        }
+      })
+    )
+
+    // Filter out failed image fetches
+    const validImageParts = imageParts.filter((img): img is NonNullable<typeof img> => img !== null)
+
+    // Build prompt for Gemini
+    const prompt = `You are a professional, friendly client service agent helping with creative projects. 
+
+The user has uploaded ${validImageParts.length} image(s) and said: "${userMessage}"
+
+Please analyze the image(s) and provide:
+1. A detailed description of what you see
+2. Your professional opinion or feedback
+3. Any relevant suggestions or recommendations
+4. How this relates to their project (if applicable)
+
+Current project context:
+- Product: ${context.productName || 'Not specified'}
+- Description: ${context.productDescription || 'Not specified'}
+- Deadline: ${context.deadline || 'Not specified'}
+
+Be helpful, professional, and provide constructive feedback. Respond in plain text (no markdown formatting).`
+
+    // Prepare content with images and text
+    const parts: any[] = [prompt, ...validImageParts]
+
+    const result = await model.generateContent(parts)
+    const response = result.response
+    const text = response.text()
+
+    // Clean markdown from response
+    const cleanResponse = text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      .replace(/_(.*?)_/g, '$1')
+      .trim()
+
+    return {
+      response: cleanResponse,
+      extractedData: undefined, // Gemini doesn't extract structured data
+    }
+  } catch (error: any) {
+    console.error('Gemini API error:', error)
+    // Fallback to ChatGPT if Gemini fails
+    console.log('Falling back to ChatGPT...')
+    return getChatGPTResponse(userMessage, context)
+  }
+}
+
+/**
+ * Get response from ChatGPT (for regular text conversations)
+ */
+async function getChatGPTResponse(
   userMessage: string,
   context: TaskContext
 ): Promise<{ response: string; extractedData?: Partial<TaskContext> }> {

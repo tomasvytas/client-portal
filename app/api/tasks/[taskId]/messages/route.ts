@@ -113,9 +113,10 @@ export async function POST(
         role: m.role,
         content: m.content,
       })),
+      imageUrls: imageUrls && imageUrls.length > 0 ? imageUrls : undefined, // Pass image URLs to AI agent
     }
 
-    const { response, extractedData } = await getAIResponse(content, context)
+    const { response, extractedData } = await getAIResponse(content || '', context)
 
     // Save AI response
     const aiMessage = await prisma.message.create({
