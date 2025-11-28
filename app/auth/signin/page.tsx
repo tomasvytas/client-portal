@@ -1,9 +1,72 @@
 'use client'
 
+import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 export default function SignInPage() {
+  const router = useRouter()
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      if (isSignUp) {
+        // Sign up - create account via API
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create account')
+        }
+
+        // After signup, sign in
+        const result = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        })
+
+        if (result?.error) {
+          throw new Error('Failed to sign in after signup')
+        }
+
+        router.push('/')
+      } else {
+        // Sign in
+        const result = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        })
+
+        if (result?.error) {
+          throw new Error('Invalid email or password')
+        }
+
+        router.push('/')
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#000000] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -23,16 +86,92 @@ export default function SignInPage() {
         <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/50 shadow-2xl">
           <div className="text-center mb-8">
             <h1 className="text-[32px] font-bold text-[#FFFFFF] mb-3">
-              Welcome to Task Chat
+              {isSignUp ? 'Create Account' : 'Welcome to Task Chat'}
             </h1>
             <p className="text-[17px] text-[#8E8E93]">
-              Sign in to continue to your client portal
+              {isSignUp ? 'Sign up to get started' : 'Sign in to continue to your client portal'}
             </p>
           </div>
 
+          {/* Email/Password Form */}
+          <form onSubmit={handleEmailAuth} className="mb-6 space-y-4">
+            {isSignUp && (
+              <div>
+                <label htmlFor="name" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required={isSignUp}
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                  placeholder="John Doe"
+                />
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div className="p-3 bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-xl">
+                <p className="text-[14px] text-[#FF3B30]">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full px-6 py-4 bg-[#007AFF] text-[#FFFFFF] rounded-xl font-semibold text-[17px] hover:bg-[#0051D5] transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#38383A]"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-[#1C1C1E] text-[#8E8E93] text-[15px]">Or</span>
+            </div>
+          </div>
+
+          {/* Google Sign In */}
           <button
             onClick={() => signIn('google', { callbackUrl: '/' })}
-            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#FFFFFF] text-[#000000] rounded-xl font-semibold text-[17px] hover:bg-[#F5F5F7] transition-all duration-200 active:scale-[0.98] shadow-lg"
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#FFFFFF] text-[#000000] rounded-xl font-semibold text-[17px] hover:bg-[#F5F5F7] transition-all duration-200 active:scale-[0.98] shadow-lg mb-6"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
               <path
@@ -54,6 +193,23 @@ export default function SignInPage() {
             </svg>
             Continue with Google
           </button>
+
+          {/* Toggle Sign Up/Sign In */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setError('')
+                setEmail('')
+                setPassword('')
+                setName('')
+              }}
+              className="text-[#007AFF] hover:text-[#0051D5] text-[15px] font-medium transition-colors"
+            >
+              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            </button>
+          </div>
 
           <p className="text-center text-[13px] text-[#8E8E93] mt-6">
             By signing in, you agree to our Terms of Service and Privacy Policy
