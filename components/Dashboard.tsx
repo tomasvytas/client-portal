@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { Package } from 'lucide-react'
+import { Package } from 'lucide-react'
 
 interface Task {
   id: string
@@ -144,13 +145,22 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-[28px] font-bold text-[#FFFFFF] tracking-tight">Your Tasks</h2>
-          <button
-            onClick={createNewTask}
-            disabled={creating}
-            className="px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
-          >
-            {creating ? 'Creating...' : '+ New Task Chat'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('/products')}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#2C2C2E] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#38383A] transition-all duration-200 active:scale-95"
+            >
+              <Package className="w-5 h-5" />
+              Products
+            </button>
+            <button
+              onClick={createNewTask}
+              disabled={creating}
+              className="px-5 py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
+            >
+              {creating ? 'Creating...' : '+ New Task Chat'}
+            </button>
+          </div>
         </div>
 
         {tasks.length === 0 ? (
