@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { Package } from 'lucide-react'
+import { Package, Plus, X, Building2 } from 'lucide-react'
 
 interface Task {
   id: string
@@ -16,17 +16,34 @@ interface Task {
   estimatedPrice: number | null
   createdAt: string
   updatedAt: string
+  organizationId: string | null
   messages: Array<{ id: string }>
   assets: Array<{ id: string; originalName: string }>
+}
+
+interface Provider {
+  id: string
+  name: string
+  slug: string
+  owner: {
+    name: string | null
+    email: string | null
+  }
+  joinedAt: string
 }
 
 export default function Dashboard() {
   const router = useRouter()
   const { data: session } = useSession()
   const [tasks, setTasks] = useState<Task[]>([])
+  const [providers, setProviders] = useState<Provider[]>([])
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [showAddProvider, setShowAddProvider] = useState(false)
+  const [inviteCode, setInviteCode] = useState('')
+  const [addingProvider, setAddingProvider] = useState(false)
 
   useEffect(() => {
     checkAdminStatus()
@@ -46,8 +63,28 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    fetchProviders()
     fetchTasks()
   }, [])
+
+  useEffect(() => {
+    // When providers load, select the first one
+    if (providers.length > 0 && !selectedProviderId) {
+      setSelectedProviderId(providers[0].id)
+    }
+  }, [providers])
+
+  const fetchProviders = async () => {
+    try {
+      const res = await fetch('/api/client/providers')
+      if (res.ok) {
+        const data = await res.json()
+        setProviders(data.providers || [])
+      }
+    } catch (error) {
+      console.error('Error fetching providers:', error)
+    }
+  }
 
   const fetchTasks = async () => {
     try {
@@ -61,13 +98,56 @@ export default function Dashboard() {
     }
   }
 
+  const handleAddProvider = async () => {
+    if (!inviteCode.trim()) {
+      alert('Please enter an invite code')
+      return
+    }
+
+    setAddingProvider(true)
+    try {
+      const res = await fetch('/api/client/providers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteCode: inviteCode.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        await fetchProviders()
+        setInviteCode('')
+        setShowAddProvider(false)
+        // Select the newly added provider
+        if (data.provider) {
+          setSelectedProviderId(data.provider.id)
+        }
+      } else {
+        alert(data.error || 'Failed to add provider')
+      }
+    } catch (error) {
+      console.error('Error adding provider:', error)
+      alert('Failed to add provider')
+    } finally {
+      setAddingProvider(false)
+    }
+  }
+
   const createNewTask = async () => {
+    if (!selectedProviderId) {
+      alert('Please select a service provider')
+      return
+    }
+
     setCreating(true)
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: 'New Task Chat' }),
+        body: JSON.stringify({ 
+          title: 'New Task Chat',
+          organizationId: selectedProviderId,
+        }),
       })
       const data = await res.json()
       if (data.task) {
@@ -80,6 +160,11 @@ export default function Dashboard() {
       setCreating(false)
     }
   }
+
+  // Filter tasks by selected provider
+  const filteredTasks = selectedProviderId
+    ? tasks.filter(task => task.organizationId === selectedProviderId)
+    : tasks
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -143,8 +228,90 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Provider Tabs */}
+        {providers.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
+              {providers.map((provider) => (
+                <button
+                  key={provider.id}
+                  onClick={() => setSelectedProviderId(provider.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[14px] sm:text-[15px] font-semibold transition-all whitespace-nowrap ${
+                    selectedProviderId === provider.id
+                      ? 'bg-[#007AFF] text-[#FFFFFF]'
+                      : 'bg-[#2C2C2E] text-[#8E8E93] hover:bg-[#38383A] hover:text-[#FFFFFF]'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" />
+                  {provider.name}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowAddProvider(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#2C2C2E] text-[#007AFF] rounded-xl text-[14px] sm:text-[15px] font-semibold hover:bg-[#38383A] transition-all whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" />
+                Add Provider
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Add Provider Modal */}
+        {showAddProvider && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowAddProvider(false)}>
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 max-w-md w-full border border-[#38383A]/50" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[20px] font-semibold text-[#FFFFFF]">Add Service Provider</h3>
+                <button
+                  onClick={() => setShowAddProvider(false)}
+                  className="p-2 hover:bg-[#2C2C2E] rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#8E8E93]" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                    Invite Code
+                  </label>
+                  <input
+                    type="text"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder="Enter invite code"
+                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddProvider()
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowAddProvider(false)}
+                    className="flex-1 px-4 py-3 bg-[#2C2C2E] text-[#FFFFFF] rounded-xl hover:bg-[#38383A] transition-colors text-[15px] font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddProvider}
+                    disabled={addingProvider || !inviteCode.trim()}
+                    className="flex-1 px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[15px] font-semibold"
+                  >
+                    {addingProvider ? 'Adding...' : 'Add'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <h2 className="text-[24px] sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight">Your Tasks</h2>
+          <h2 className="text-[24px] sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight">
+            {selectedProviderId ? providers.find(p => p.id === selectedProviderId)?.name + ' Tasks' : 'Your Tasks'}
+          </h2>
           <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => router.push('/products')}
@@ -155,7 +322,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={createNewTask}
-              disabled={creating}
+              disabled={creating || !selectedProviderId}
               className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
             >
               {creating ? 'Creating...' : <><span className="hidden sm:inline">+ New Task Chat</span><span className="sm:hidden">+ New</span></>}
@@ -163,12 +330,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {tasks.length === 0 ? (
+        {providers.length === 0 ? (
           <div className="bg-[#1C1C1E] rounded-2xl p-16 text-center border border-[#38383A]/30">
-            <p className="text-[#8E8E93] text-[17px] mb-6">You don't have any tasks yet.</p>
+            <p className="text-[#8E8E93] text-[17px] mb-6">You're not linked to any service providers yet.</p>
+            <button
+              onClick={() => setShowAddProvider(true)}
+              className="px-6 py-3 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] transition-all duration-200 active:scale-95"
+            >
+              Add Your First Provider
+            </button>
+          </div>
+        ) : filteredTasks.length === 0 ? (
+          <div className="bg-[#1C1C1E] rounded-2xl p-16 text-center border border-[#38383A]/30">
+            <p className="text-[#8E8E93] text-[17px] mb-6">You don't have any tasks for this provider yet.</p>
             <button
               onClick={createNewTask}
-              disabled={creating}
+              disabled={creating || !selectedProviderId}
               className="px-6 py-3 bg-[#007AFF] text-[#FFFFFF] text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 transition-all duration-200 active:scale-95"
             >
               Create Your First Task
@@ -176,7 +353,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid gap-4 sm:gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <div
                 key={task.id}
                 onClick={() => router.push(`/tasks/${task.id}`)}

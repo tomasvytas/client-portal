@@ -103,22 +103,41 @@ export async function POST(request: NextRequest) {
     }
 
     // Get organization ID for the task
-    let organizationId: string | null = null
+    let finalOrganizationId: string | null = null
 
     if (user.role === 'client') {
-      // Client - link to their primary organization
-      const clientProviders = await prisma.clientProvider.findFirst({
-        where: { clientId: session.user.id },
-        orderBy: { joinedAt: 'asc' },
-        select: { organizationId: true },
-      })
-      organizationId = clientProviders?.organizationId || null
+      // If organizationId is provided, validate it belongs to the client
+      if (organizationId) {
+        const clientProvider = await prisma.clientProvider.findUnique({
+          where: {
+            clientId_organizationId: {
+              clientId: session.user.id,
+              organizationId: organizationId,
+            },
+          },
+        })
+        if (!clientProvider) {
+          return NextResponse.json(
+            { error: 'Invalid organization ID or you are not linked to this provider' },
+            { status: 400 }
+          )
+        }
+        finalOrganizationId = organizationId
+      } else {
+        // Default to primary organization
+        const clientProviders = await prisma.clientProvider.findFirst({
+          where: { clientId: session.user.id },
+          orderBy: { joinedAt: 'asc' },
+          select: { organizationId: true },
+        })
+        finalOrganizationId = clientProviders?.organizationId || null
 
-      if (!organizationId) {
-        return NextResponse.json(
-          { error: 'Client must be linked to a service provider organization' },
-          { status: 400 }
-        )
+        if (!finalOrganizationId) {
+          return NextResponse.json(
+            { error: 'Client must be linked to a service provider organization' },
+            { status: 400 }
+          )
+        }
       }
     } else if (user.role === 'service_provider') {
       // Service provider - link to their owned organization
@@ -126,17 +145,17 @@ export async function POST(request: NextRequest) {
         where: { ownerId: session.user.id },
         select: { id: true },
       })
-      organizationId = organization?.id || null
+      finalOrganizationId = organization?.id || null
     }
     // Master admin can create tasks without organization (for testing/admin purposes)
 
     const body = await request.json()
-    const { title } = body
+    const { title, organizationId } = body
 
     const task = await prisma.task.create({
       data: {
         userId: session.user.id,
-        organizationId,
+        organizationId: finalOrganizationId,
         title: title || 'New Task',
         clientEmail: session.user.email || undefined,
         clientName: session.user.name || undefined,
