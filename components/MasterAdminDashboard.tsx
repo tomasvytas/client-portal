@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2 } from 'lucide-react'
+import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2, LogOut } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 
 interface Stats {
   totalOrganizations: number
@@ -154,19 +155,29 @@ export default function MasterAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-4 mb-4">
+      {/* Header with back button and logout */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              // Use window.location to change tab via URL
+              window.location.href = '/admin?tab=board'
+            }}
+            className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-colors text-[#8E8E93] hover:text-[#FFFFFF]"
+            title="Back to Task Board"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h2 className="text-[24px] font-bold text-[#FFFFFF]">Master Admin Dashboard</h2>
+        </div>
         <button
-          onClick={() => {
-            // Use window.location to change tab via URL
-            window.location.href = '/admin?tab=board'
-          }}
-          className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-colors text-[#8E8E93] hover:text-[#FFFFFF]"
-          title="Back to Task Board"
+          onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+          className="flex items-center gap-2 px-4 py-2 bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 text-[#FF3B30] rounded-xl transition-colors text-[15px] font-semibold"
+          title="Logout"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <LogOut className="w-4 h-4" />
+          Logout
         </button>
-        <h2 className="text-[24px] font-bold text-[#FFFFFF]">Master Admin Dashboard</h2>
       </div>
 
       {/* Stats Overview */}

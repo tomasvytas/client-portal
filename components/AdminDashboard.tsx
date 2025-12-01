@@ -25,6 +25,8 @@ export default function AdminDashboard() {
   const [isMasterAdmin, setIsMasterAdmin] = useState(false)
   const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState<any>(null)
+  const [loadingUserInfo, setLoadingUserInfo] = useState(false)
 
   // Check if user is master admin and fetch organization
   useEffect(() => {
@@ -51,6 +53,29 @@ export default function AdminDashboard() {
         .catch(() => {})
     }
   }, [isMasterAdmin])
+
+  // Fetch user info when settings tab is opened
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      setLoadingUserInfo(true)
+      fetch('/api/admin/user-info')
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setUserInfo(data.user)
+            if (data.user.organization) {
+              setOrganization({
+                inviteCode: data.user.organization.inviteCode,
+                inviteLink: data.user.organization.inviteLink,
+                name: data.user.organization.name,
+              })
+            }
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingUserInfo(false))
+    }
+  }, [activeTab])
 
   // Check for auth callback results
   useEffect(() => {
@@ -245,9 +270,116 @@ export default function AdminDashboard() {
         {activeTab === 'services' && <ServicesManagement />}
         {activeTab === 'master' && isMasterAdmin && <MasterAdminDashboard />}
         {activeTab === 'settings' && (
-          <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
-            <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>
+          <div className="space-y-6">
+            {/* Organization Header */}
+            {userInfo?.organization && (
+              <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <Building2 className="w-6 h-6 text-[#007AFF]" />
+                  <h1 className="text-[24px] font-bold text-[#FFFFFF]">{userInfo.organization.name}</h1>
+                </div>
+                <p className="text-[15px] text-[#8E8E93]">
+                  {userInfo.role === 'service_provider' ? 'Service Provider' : userInfo.role === 'client' ? 'Client' : 'User'}
+                </p>
+              </div>
+            )}
+
+            {/* Stats Cards */}
+            {userInfo && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <Users className="w-8 h-8 text-[#007AFF]" />
+                  </div>
+                  <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                    {userInfo.organization?._count?.clients || userInfo._count?.clients || 0}
+                  </div>
+                  <div className="text-[15px] text-[#8E8E93]">Clients</div>
+                </div>
+
+                <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <FileText className="w-8 h-8 text-[#30D158]" />
+                  </div>
+                  <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                    {userInfo.organization?._count?.tasks || userInfo._count?.tasks || 0}
+                  </div>
+                  <div className="text-[15px] text-[#8E8E93]">Tasks</div>
+                </div>
+
+                <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <CreditCard className="w-8 h-8 text-[#FF9500]" />
+                  </div>
+                  <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                    {userInfo.organization?.subscription ? 
+                      (userInfo.organization.subscription.plan === '1_month' ? '1M' :
+                       userInfo.organization.subscription.plan === '3_month' ? '3M' : '6M') : 
+                      '-'}
+                  </div>
+                  <div className="text-[15px] text-[#8E8E93]">Plan</div>
+                </div>
+
+                <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <DollarSign className="w-8 h-8 text-[#AF52DE]" />
+                  </div>
+                  <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                    {userInfo.organization?.subscription?.clientCount || 0}
+                  </div>
+                  <div className="text-[15px] text-[#8E8E93]">Invoice #</div>
+                </div>
+              </div>
+            )}
+
+            {/* Settings Content */}
+            <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
+              <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>
             
+            {/* User Information */}
+            {userInfo && (
+              <div className="mb-8 p-6 bg-[#2C2C2E] rounded-xl border border-[#38383A]/30">
+                <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">User Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                      Name
+                    </label>
+                    <p className="text-[15px] text-[#FFFFFF]">{userInfo.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                      Email
+                    </label>
+                    <p className="text-[15px] text-[#FFFFFF]">{userInfo.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                      Role
+                    </label>
+                    <p className="text-[15px] text-[#FFFFFF] capitalize">
+                      {userInfo.role === 'service_provider' ? 'Service Provider' : 
+                       userInfo.role === 'client' ? 'Client' : 
+                       userInfo.role === 'master_admin' ? 'Master Admin' : userInfo.role}
+                    </p>
+                  </div>
+                  {userInfo.organization?.subscription && (
+                    <div>
+                      <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                        Subscription Status
+                      </label>
+                      <p className="text-[15px] text-[#FFFFFF] capitalize">
+                        {userInfo.organization.subscription.status}
+                      </p>
+                      <p className="text-[13px] text-[#8E8E93] mt-1">
+                        Expires: {new Date(userInfo.organization.subscription.currentPeriodEnd).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Invite Code Section */}
             {organization && (
               <div className="mb-8 p-6 bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-xl border border-[#007AFF]/20">
