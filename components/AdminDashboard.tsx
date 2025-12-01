@@ -9,6 +9,7 @@ import TaskTable from './TaskTable'
 import ServicesManagement from './ServicesManagement'
 import ClientsManagement from './ClientsManagement'
 import MasterAdminDashboard from './MasterAdminDashboard'
+import PortalSelector from './PortalSelector'
 
 type Tab = 'board' | 'clients' | 'pricing' | 'services' | 'settings' | 'master'
 
