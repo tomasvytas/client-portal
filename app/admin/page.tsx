@@ -7,7 +7,7 @@ export default async function AdminPage() {
   const session = await auth()
   
   if (!session) {
-    redirect('/api/auth/signin')
+    redirect('/auth/signin')
   }
 
   const admin = await isAdmin()

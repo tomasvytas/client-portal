@@ -33,19 +33,6 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
-        _count: {
-          select: {
-            client: {
-              select: {
-                tasks: {
-                  where: {
-                    organizationId: organization.id,
-                  },
-                },
-              },
-            },
-          },
-        },
       },
       orderBy: { joinedAt: 'desc' },
     })
