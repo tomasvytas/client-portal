@@ -89,17 +89,18 @@ export default function PortalSelector() {
     setShowSelector(false)
   }
 
+  const currentPortalData = portals.find(p => p.id === currentPortal)
+  const CurrentIcon = currentPortalData?.icon
+
   return (
     <div className="relative">
       <button
         onClick={() => setShowSelector(!showSelector)}
         className="flex items-center gap-2 px-4 py-2 bg-[#2C2C2E] hover:bg-[#38383A] rounded-xl text-[14px] font-semibold text-[#FFFFFF] transition-colors"
       >
-        {portals.find(p => p.id === currentPortal)?.icon && (
-          <portals.find(p => p.id === currentPortal)!.icon className="w-4 h-4" />
-        )}
+        {CurrentIcon && <CurrentIcon className="w-4 h-4" />}
         <span className="hidden sm:inline">
-          {portals.find(p => p.id === currentPortal)?.name || 'Select Portal'}
+          {currentPortalData?.name || 'Select Portal'}
         </span>
         <span className="sm:hidden">Portal</span>
       </button>
