@@ -513,6 +513,116 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        {/* Company Registration Modal */}
+        {showCompanyModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCompanyModal(false)}>
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 max-w-md w-full border border-[#38383A]/50" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[20px] font-semibold text-[#FFFFFF]">Register Your Company</h3>
+                <button
+                  onClick={() => setShowCompanyModal(false)}
+                  className="p-2 hover:bg-[#2C2C2E] rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#8E8E93]" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="Enter your company name"
+                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSaveCompany()
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowCompanyModal(false)}
+                    className="flex-1 px-4 py-3 bg-[#2C2C2E] text-[#FFFFFF] rounded-xl hover:bg-[#38383A] transition-colors text-[15px] font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveCompany}
+                    disabled={savingCompany || !companyName.trim()}
+                    className="flex-1 px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[15px] font-semibold"
+                  >
+                    {savingCompany ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Product Website Modal */}
+        {showProductWebsiteModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowProductWebsiteModal(false)}>
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 max-w-md w-full border border-[#38383A]/50" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[20px] font-semibold text-[#FFFFFF]">Add Product for Analysis</h3>
+                <button
+                  onClick={() => setShowProductWebsiteModal(false)}
+                  className="p-2 hover:bg-[#2C2C2E] rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#8E8E93]" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Enter product name"
+                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                    Website URL
+                  </label>
+                  <input
+                    type="text"
+                    value={productWebsite}
+                    onChange={(e) => setProductWebsite(e.target.value)}
+                    placeholder="https://www.example.com"
+                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                  />
+                  <p className="text-[13px] text-[#8E8E93] mt-2">Enter your product website URL to start analysis</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowProductWebsiteModal(false)}
+                    className="flex-1 px-4 py-3 bg-[#2C2C2E] text-[#FFFFFF] rounded-xl hover:bg-[#38383A] transition-colors text-[15px] font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddProductWebsite}
+                    disabled={addingProduct || !productWebsite.trim() || !productName.trim()}
+                    className="flex-1 px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[15px] font-semibold"
+                  >
+                    {addingProduct ? 'Adding...' : 'Add Product'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
