@@ -16,6 +16,9 @@ function SignInForm() {
   const [inviteCode, setInviteCode] = useState('')
   const [organizationName, setOrganizationName] = useState('')
   const [subscriptionPlan, setSubscriptionPlan] = useState<'1_month' | '3_month' | '6_month' | ''>('')
+  const [companyName, setCompanyName] = useState('')
+  const [productWebsite, setProductWebsite] = useState('')
+  const [productName, setProductName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -67,6 +70,9 @@ function SignInForm() {
             inviteCode: role === 'client' ? inviteCode : undefined,
             organizationName: role === 'service_provider' ? organizationName : undefined,
             subscriptionPlan: role === 'service_provider' ? subscriptionPlan : undefined,
+            companyName: role === 'client' ? (companyName.trim() || undefined) : undefined,
+            productWebsite: role === 'client' ? (productWebsite.trim() || undefined) : undefined,
+            productName: role === 'client' ? (productName.trim() || undefined) : undefined,
           }),
         })
 
@@ -306,23 +312,77 @@ function SignInForm() {
 
                 {/* Client Fields */}
                 {role === 'client' && (
-                  <div>
-                    <label htmlFor="inviteCode" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
-                      Invite Code
-                    </label>
-                    <input
-                      id="inviteCode"
-                      type="text"
-                      value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                      required
-                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all uppercase"
-                      placeholder="ENTER INVITE CODE"
-                    />
-                    <p className="text-[13px] text-[#8E8E93] mt-2">
-                      Get this code from your service provider
-                    </p>
-                  </div>
+                  <>
+                    <div>
+                      <label htmlFor="inviteCode" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                        Invite Code <span className="text-[#FF3B30]">*</span>
+                      </label>
+                      <input
+                        id="inviteCode"
+                        type="text"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                        required
+                        className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all uppercase"
+                        placeholder="ENTER INVITE CODE"
+                      />
+                      <p className="text-[13px] text-[#8E8E93] mt-2">
+                        Get this code from your service provider
+                      </p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="companyName" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                        Company Name <span className="text-[#8E8E93] text-[13px] font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        id="companyName"
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                        placeholder="Your Company Name"
+                      />
+                      <p className="text-[13px] text-[#8E8E93] mt-2">
+                        Register your company name (can be added later)
+                      </p>
+                    </div>
+
+                    <div className="bg-[#1C1C1E] rounded-xl p-4 border border-[#38383A]/30">
+                      <p className="text-[14px] font-semibold text-[#FFFFFF] mb-3">Product Analysis (Optional)</p>
+                      <p className="text-[13px] text-[#8E8E93] mb-4">
+                        Add your product website to start analysis immediately after registration
+                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <label htmlFor="productName" className="block text-[13px] font-semibold text-[#8E8E93] mb-1.5">
+                            Product Name
+                          </label>
+                          <input
+                            id="productName"
+                            type="text"
+                            value={productName}
+                            onChange={(e) => setProductName(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-[#2C2C2E] border border-[#38383A] rounded-lg text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
+                            placeholder="My Product"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="productWebsite" className="block text-[13px] font-semibold text-[#8E8E93] mb-1.5">
+                            Website URL
+                          </label>
+                          <input
+                            id="productWebsite"
+                            type="text"
+                            value={productWebsite}
+                            onChange={(e) => setProductWebsite(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-[#2C2C2E] border border-[#38383A] rounded-lg text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
+                            placeholder="https://www.example.com"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </>
             )}

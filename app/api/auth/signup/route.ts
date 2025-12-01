@@ -20,7 +20,7 @@ function generateSlug(name: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name, role, inviteCode, organizationName, subscriptionPlan } = body
+    const { email, password, name, role, inviteCode, organizationName, subscriptionPlan, companyName, productWebsite, productName } = body
 
     if (!email || !password) {
       return NextResponse.json(
