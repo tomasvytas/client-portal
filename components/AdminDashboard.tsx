@@ -262,25 +262,6 @@ export default function AdminDashboard() {
               <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
               Services
             </button>
-            {isMasterAdmin && (
-              <button
-                onClick={() => {
-                  if (isMasterAdmin) {
-                    setActiveTab('master')
-                    router.push('/admin?tab=master')
-                  }
-                }}
-                className={`${
-                  activeTab === 'master'
-                    ? 'border-[#007AFF] text-[#007AFF]'
-                    : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
-                } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
-              >
-                <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Admin</span>
-                <span className="sm:hidden">Admin</span>
-              </button>
-            )}
             <button
               onClick={() => setActiveTab('settings')}
               className={`${
@@ -302,15 +283,6 @@ export default function AdminDashboard() {
         {activeTab === 'clients' && <ClientsManagement />}
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'services' && <ServicesManagement />}
-        {activeTab === 'master' && isMasterAdmin ? (
-          <MasterAdminDashboard />
-        ) : activeTab === 'master' ? (
-          <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30 text-center">
-            <Shield className="w-12 h-12 text-[#8E8E93] mx-auto mb-4" />
-            <h2 className="text-[20px] font-semibold text-[#FFFFFF] mb-2">Access Denied</h2>
-            <p className="text-[15px] text-[#8E8E93]">You don't have permission to access the Admin Portal.</p>
-          </div>
-        ) : null}
         
         {activeTab === 'settings' && (
           <div className="space-y-6">
