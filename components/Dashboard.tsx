@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { Package, Plus, X, Building2 } from 'lucide-react'
+import { Package, Plus, X, Building2, FileText, DollarSign, TrendingUp, Globe, Building } from 'lucide-react'
 import PortalSelector from './PortalSelector'
 
 interface Task {
@@ -45,6 +45,15 @@ export default function Dashboard() {
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [inviteCode, setInviteCode] = useState('')
   const [addingProvider, setAddingProvider] = useState(false)
+  const [stats, setStats] = useState<{ totalTasks: number; totalSpending: number; companyName: string | null } | null>(null)
+  const [loadingStats, setLoadingStats] = useState(true)
+  const [showCompanyModal, setShowCompanyModal] = useState(false)
+  const [companyName, setCompanyName] = useState('')
+  const [savingCompany, setSavingCompany] = useState(false)
+  const [showProductWebsiteModal, setShowProductWebsiteModal] = useState(false)
+  const [productWebsite, setProductWebsite] = useState('')
+  const [productName, setProductName] = useState('')
+  const [addingProduct, setAddingProduct] = useState(false)
 
   useEffect(() => {
     checkAdminStatus()
@@ -66,7 +75,15 @@ export default function Dashboard() {
   useEffect(() => {
     fetchProviders()
     fetchTasks()
+    fetchStats()
   }, [])
+
+  useEffect(() => {
+    // Set company name from stats when loaded
+    if (stats?.companyName && !companyName) {
+      setCompanyName(stats.companyName)
+    }
+  }, [stats])
 
   useEffect(() => {
     // When providers load, select the first one
@@ -96,6 +113,92 @@ export default function Dashboard() {
       console.error('Error fetching tasks:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/client/stats')
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  const handleSaveCompany = async () => {
+    if (!companyName.trim()) {
+      alert('Please enter a company name')
+      return
+    }
+
+    setSavingCompany(true)
+    try {
+      const res = await fetch('/api/client/company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyName: companyName.trim() }),
+      })
+
+      if (res.ok) {
+        setStats(prev => prev ? { ...prev, companyName: companyName.trim() } : null)
+        setShowCompanyModal(false)
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to save company name')
+      }
+    } catch (error) {
+      console.error('Error saving company:', error)
+      alert('Failed to save company name')
+    } finally {
+      setSavingCompany(false)
+    }
+  }
+
+  const handleAddProductWebsite = async () => {
+    if (!productWebsite.trim() || !productName.trim()) {
+      alert('Please enter both product name and website URL')
+      return
+    }
+
+    // Validate URL format
+    try {
+      new URL(productWebsite.startsWith('http') ? productWebsite : `https://${productWebsite}`)
+    } catch {
+      alert('Please enter a valid website URL (e.g., https://www.example.com)')
+      return
+    }
+
+    setAddingProduct(true)
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: productName.trim(),
+          websiteUrl: productWebsite.startsWith('http') ? productWebsite : `https://${productWebsite}`,
+        }),
+      })
+
+      if (res.ok) {
+        setProductWebsite('')
+        setProductName('')
+        setShowProductWebsiteModal(false)
+        // Redirect to products page to see the analysis
+        router.push('/products')
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to add product')
+      }
+    } catch (error) {
+      console.error('Error adding product:', error)
+      alert('Failed to add product')
+    } finally {
+      setAddingProduct(false)
     }
   }
 

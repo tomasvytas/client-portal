@@ -45,6 +45,7 @@ model User {
   image         String?
   role          String    @default("client") // client, service_provider, master_admin
   isMasterAdmin Boolean   @default(false) // Master admin can see all accounts
+  companyName   String?   // Company name for clients
   ownedOrganization Organization? @relation("OrganizationOwner") // Organization owned by this user (service provider)
   accounts      Account[]
   sessions      Session[]
