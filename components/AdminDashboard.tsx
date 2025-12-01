@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users } from 'lucide-react'
+import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users, Shield } from 'lucide-react'
 import PricingManagement from './PricingManagement'
 import TaskTable from './TaskTable'
 import ServicesManagement from './ServicesManagement'
 import ClientsManagement from './ClientsManagement'
+import MasterAdminDashboard from './MasterAdminDashboard'
 
-type Tab = 'board' | 'clients' | 'pricing' | 'services' | 'settings'
+type Tab = 'board' | 'clients' | 'pricing' | 'services' | 'settings' | 'master'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -21,6 +22,17 @@ export default function AdminDashboard() {
   const [copied, setCopied] = useState(false)
   const [migrating, setMigrating] = useState(false)
   const [migrationResult, setMigrationResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false)
+
+  // Check if user is master admin
+  useEffect(() => {
+    fetch('/api/admin/check')
+      .then(res => res.json())
+      .then(data => {
+        setIsMasterAdmin(data.isMasterAdmin || false)
+      })
+      .catch(() => setIsMasterAdmin(false))
+  }, [])
 
   // Check for auth callback results
   useEffect(() => {
@@ -172,6 +184,20 @@ export default function AdminDashboard() {
               <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
               Services
             </button>
+            {isMasterAdmin && (
+              <button
+                onClick={() => setActiveTab('master')}
+                className={`${
+                  activeTab === 'master'
+                    ? 'border-[#007AFF] text-[#007AFF]'
+                    : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+                } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
+              >
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Master Admin</span>
+                <span className="sm:hidden">Master</span>
+              </button>
+            )}
             <button
               onClick={() => setActiveTab('settings')}
               className={`${
@@ -193,6 +219,7 @@ export default function AdminDashboard() {
         {activeTab === 'clients' && <ClientsManagement />}
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'services' && <ServicesManagement />}
+        {activeTab === 'master' && isMasterAdmin && <MasterAdminDashboard />}
         {activeTab === 'settings' && (
           <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
             <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>
