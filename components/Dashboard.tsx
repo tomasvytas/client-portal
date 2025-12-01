@@ -418,59 +418,6 @@ export default function Dashboard() {
           </div>
         )}
       </main>
-      
-      {/* Role Switcher for testing account */}
-      {session?.user?.email === 'tv.vytas@gmail.com' && (
-        <div className="fixed bottom-4 right-4 z-50 bg-[#1C1C1E] border border-[#38383A] rounded-2xl p-4 shadow-lg">
-          <div className="text-[13px] font-semibold text-[#FFFFFF] mb-3">Test Mode: Switch Role</div>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => router.push('/admin')}
-              className="px-3 py-2 bg-[#30D158] text-[#FFFFFF] rounded-lg text-[12px] font-semibold hover:bg-[#28C048]"
-            >
-              Service Provider
-            </button>
-            <button
-              onClick={async () => {
-                const res = await fetch('/api/admin/check')
-                const data = await res.json()
-                if (data.isMasterAdmin) {
-                  router.push('/admin?tab=master')
-                } else {
-                  // Auto-enable admin access for testing account
-                  try {
-                    const sessionRes = await fetch('/api/auth/session').then(r => r.json())
-                    const email = sessionRes?.user?.email
-                    
-                    if (email && email === 'tv.vytas@gmail.com') {
-                      const enableRes = await fetch('/api/admin/set-master-admin-test', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email }),
-                      })
-                      
-                      if (enableRes.ok) {
-                        router.push('/admin?tab=master')
-                        setTimeout(() => window.location.reload(), 500)
-                      } else {
-                        const errorData = await enableRes.json().catch(() => ({}))
-                        alert(errorData.error || 'Failed to enable admin access')
-                      }
-                    } else {
-                      alert('Please enable admin access from Settings in Admin Panel')
-                    }
-                  } catch (error) {
-                    alert('Failed to enable admin access')
-                  }
-                }
-              }}
-              className="px-3 py-2 bg-[#FF9500] text-[#FFFFFF] rounded-lg text-[12px] font-semibold hover:bg-[#E6850E]"
-            >
-              Admin View
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
