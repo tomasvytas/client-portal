@@ -1,12 +1,12 @@
-import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import Dashboard from '@/components/Dashboard'
+import LandingPage from '@/components/LandingPage'
 
 export default async function Home() {
   const session = await auth()
   
   if (!session) {
-    redirect('/auth/signin')
+    return <LandingPage />
   }
 
   return <Dashboard />
