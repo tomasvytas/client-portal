@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { Package, Plus, X, Building2 } from 'lucide-react'
+import PortalSelector from './PortalSelector'
 
 interface Task {
   id: string
@@ -207,15 +208,7 @@ export default function Dashboard() {
               />
             </div>
             <div className="flex items-center gap-3 sm:gap-5">
-              {isAdmin && (
-                <button
-                  onClick={() => router.push('/admin')}
-                  className="text-[13px] sm:text-[15px] text-[#007AFF] hover:text-[#0051D5] font-medium transition-colors"
-                >
-                  <span className="hidden sm:inline">Admin Panel</span>
-                  <span className="sm:hidden">Admin</span>
-                </button>
-              )}
+              <PortalSelector />
               <button
                 onClick={() => signOut()}
                 className="text-[13px] sm:text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"

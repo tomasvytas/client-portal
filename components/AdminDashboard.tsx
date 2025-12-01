@@ -169,13 +169,7 @@ export default function AdminDashboard() {
               )}
             </div>
             <div className="flex items-center gap-3 sm:gap-5">
-              <button
-                onClick={() => router.push('/')}
-                className="text-[13px] sm:text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
-              >
-                <span className="hidden sm:inline">Client Portal</span>
-                <span className="sm:hidden">Portal</span>
-              </button>
+              <PortalSelector />
               <button
                 onClick={() => signOut()}
                 className="text-[13px] sm:text-[15px] text-[#8E8E93] hover:text-[#FFFFFF] transition-colors"
