@@ -35,7 +35,17 @@ export default function AdminDashboard() {
     fetch('/api/admin/check')
       .then(res => res.json())
       .then(data => {
-        setIsMasterAdmin(data.isMasterAdmin || false)
+        const masterAdmin = data.isMasterAdmin || false
+        setIsMasterAdmin(masterAdmin)
+        
+        // If user tries to access master tab but is not master admin, redirect to board
+        const tabParam = searchParams.get('tab')
+        if (tabParam === 'master' && !masterAdmin) {
+          router.replace('/admin')
+          setActiveTab('board')
+        } else if (tabParam === 'master' && masterAdmin) {
+          setActiveTab('master')
+        }
       })
       .catch(() => setIsMasterAdmin(false))
 
@@ -52,7 +62,7 @@ export default function AdminDashboard() {
         }
       })
       .catch(() => {})
-  }, [isMasterAdmin])
+  }, [searchParams, router])
 
   // Fetch user info when settings tab is opened
   useEffect(() => {
