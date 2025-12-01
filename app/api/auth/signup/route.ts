@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
         name: name || null,
         emailVerified: null,
         role: userRole,
+        companyName: userRole === 'client' && companyName ? companyName.trim() : null,
       },
     })
 
