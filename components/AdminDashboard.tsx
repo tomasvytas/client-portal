@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users, Shield, ExternalLink } from 'lucide-react'
+import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users, Shield, ExternalLink, FileText, CreditCard, Building2 } from 'lucide-react'
 import PricingManagement from './PricingManagement'
 import TaskTable from './TaskTable'
 import ServicesManagement from './ServicesManagement'
