@@ -249,10 +249,91 @@ export default function AdminDashboard() {
             <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>
             
             {/* Invite Code Section */}
-            <InviteCodeSection />
+            {organization && (
+              <div className="mb-8 p-6 bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-xl border border-[#007AFF]/20">
+                <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF] flex items-center gap-2">
+                  <Users className="w-5 h-5 text-[#007AFF]" />
+                  Client Invite Information
+                </h3>
+                <p className="text-[14px] text-[#8E8E93] mb-4">
+                  Share your invite code or link with clients so they can join your organization.
+                </p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                      Invite Code
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={organization.inviteCode}
+                        className="flex-1 px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[17px] font-mono font-bold"
+                      />
+                      <button
+                        onClick={() => handleCopyInvite(organization.inviteCode, 'code')}
+                        className="px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                      >
+                        {copiedInvite === `code-${organization.inviteCode}` ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                      Invite Link
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={organization.inviteLink}
+                        className="flex-1 px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[13px] font-mono truncate"
+                      />
+                      <button
+                        onClick={() => handleCopyInvite(organization.inviteLink, 'link')}
+                        className="px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                      >
+                        {copiedInvite === `link-${organization.inviteLink}` ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                      <a
+                        href={organization.inviteLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors"
+                        title="Open invite link"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Google Drive OAuth Setup */}
-            <div className="mb-8 mt-8">
+            <div className="mb-8">
               <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Google Drive Integration</h3>
               
               {driveAuthError && (
