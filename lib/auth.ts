@@ -66,16 +66,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user, token }) {
+    async session({ session, token }) {
       if (session.user) {
         // For credentials provider, user might not be available, use token
-        session.user.id = user?.id || (token.sub as string)
+        session.user.id = token.sub as string
       }
       return session
     },
     async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id
+        token.sub = user.id
       }
       return token
     },
