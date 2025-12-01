@@ -111,46 +111,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // If service provider, create organization and subscription
+    // If service provider, return user info - organization will be created after payment
     if (userRole === 'service_provider') {
-      const slug = generateSlug(organizationName)
-      const inviteCode = generateInviteCode()
-      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-      const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
-
-      // Check if slug already exists
-      const existingOrg = await prisma.organization.findUnique({
-        where: { slug },
-      })
-
-      let finalSlug = slug
-      if (existingOrg) {
-        finalSlug = `${slug}-${Date.now()}`
-      }
-
-      // Calculate subscription dates
-      const now = new Date()
-      let periodEnd = new Date()
-      if (subscriptionPlan === '1_month') {
-        periodEnd.setMonth(periodEnd.getMonth() + 1)
-      } else if (subscriptionPlan === '3_month') {
-        periodEnd.setMonth(periodEnd.getMonth() + 3)
-      } else if (subscriptionPlan === '6_month') {
-        periodEnd.setMonth(periodEnd.getMonth() + 6)
-      }
-
-      // Create organization
-      const organization = await prisma.organization.create({
-        data: {
-          name: organizationName,
-          slug: finalSlug,
-          ownerId: user.id,
-          inviteCode,
-          inviteLink,
-        },
-      })
-
-      // For service providers, return user info - organization will be created after payment
       return NextResponse.json({
         message: 'Account created. Redirecting to payment...',
         user: {
