@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { canUserAccessTask } from '@/lib/organization'
 import ChatInterface from '@/components/ChatInterface'
 
 export default async function TaskPage({
@@ -11,15 +12,19 @@ export default async function TaskPage({
   const session = await auth()
   
   if (!session?.user?.id) {
-    redirect('/api/auth/signin')
+    redirect('/auth/signin')
   }
 
   const { taskId } = await params
-  const task = await prisma.task.findFirst({
-    where: {
-      id: taskId,
-      userId: session.user.id,
-    },
+
+  // Check if user can access this task
+  const canAccess = await canUserAccessTask(session.user.id, taskId)
+  if (!canAccess) {
+    redirect('/')
+  }
+
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
   })
 
   if (!task) {

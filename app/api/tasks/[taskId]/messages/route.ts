@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getAIResponse } from '@/lib/ai-agent'
 import { generateTaskBrief } from '@/lib/task-brief'
+import { canUserAccessTask } from '@/lib/organization'
 
 export async function GET(
   request: NextRequest,
@@ -15,11 +16,15 @@ export async function GET(
     }
 
     const { taskId } = await params
-    const task = await prisma.task.findFirst({
-      where: {
-        id: taskId,
-        userId: session.user.id,
-      },
+
+    // Check if user can access this task
+    const canAccess = await canUserAccessTask(session.user.id, taskId)
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
     })
 
     if (!task) {
@@ -58,11 +63,15 @@ export async function POST(
     }
 
     const { taskId } = await params
-    const task = await prisma.task.findFirst({
-      where: {
-        id: taskId,
-        userId: session.user.id,
-      },
+
+    // Check if user can access this task
+    const canAccess = await canUserAccessTask(session.user.id, taskId)
+    if (!canAccess) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
       include: {
         assets: true,
         messages: {

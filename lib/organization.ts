@@ -46,3 +46,56 @@ export async function getClientPrimaryOrganizationId(userId: string): Promise<st
   return clientProvider?.organizationId || null
 }
 
+/**
+ * Check if a user can access a task based on organization membership
+ */
+export async function canUserAccessTask(userId: string, taskId: string): Promise<boolean> {
+  // Get user
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, isMasterAdmin: true },
+  })
+
+  if (!user) return false
+
+  // Master admin can access everything
+  if (user.isMasterAdmin) return true
+
+  // Get task
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { userId: true, organizationId: true },
+  })
+
+  if (!task) return false
+
+  // If task has no organization, only the owner can access it
+  if (!task.organizationId) {
+    return task.userId === userId
+  }
+
+  // Service provider - check if task belongs to their organization
+  if (user.role === 'service_provider') {
+    const org = await prisma.organization.findUnique({
+      where: { ownerId: userId },
+      select: { id: true },
+    })
+    return org?.id === task.organizationId
+  }
+
+  // Client - check if they own the task and it's in their organization
+  if (user.role === 'client') {
+    if (task.userId !== userId) return false
+    
+    const clientProvider = await prisma.clientProvider.findFirst({
+      where: {
+        clientId: userId,
+        organizationId: task.organizationId,
+      },
+    })
+    return !!clientProvider
+  }
+
+  return false
+}
+
