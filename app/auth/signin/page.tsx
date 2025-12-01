@@ -411,3 +411,15 @@ function SignInForm() {
   )
 }
 
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="text-[#8E8E93] text-[17px]">Loading...</div>
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
+  )
+}
+
