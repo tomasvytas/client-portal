@@ -171,6 +171,45 @@ export async function POST(request: NextRequest) {
         },
       })
 
+      // If product website and name provided, create product and trigger analysis
+      let productCreated = false
+      if (productWebsite && productName) {
+        try {
+          // Validate URL format
+          const websiteUrl = productWebsite.startsWith('http') ? productWebsite : `https://${productWebsite}`
+          
+          // Create product
+          const product = await prisma.product.create({
+            data: {
+              userId: user.id,
+              organizationId: organization.id,
+              name: productName.trim(),
+              websiteUrl,
+              status: 'pending',
+            },
+          })
+
+          productCreated = true
+
+          // Trigger analysis in background (don't wait for it)
+          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+          fetch(`${baseUrl}/api/products/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              productId: product.id,
+              websiteUrl,
+            }),
+          }).catch(err => {
+            console.error('Error triggering product analysis:', err)
+            // Don't fail registration if analysis fails
+          })
+        } catch (error: any) {
+          console.error('Error creating product during signup:', error)
+          // Don't fail registration if product creation fails
+        }
+      }
+
       return NextResponse.json({
         message: 'Client account created and linked successfully',
         user: {
@@ -183,6 +222,7 @@ export async function POST(request: NextRequest) {
           id: organization.id,
           name: organization.name,
         },
+        productCreated,
       })
     }
 
