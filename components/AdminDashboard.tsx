@@ -614,6 +614,7 @@ export default function AdminDashboard() {
                 )}
               </button>
             </div>
+            </div>
           </div>
         )}
       </main>
