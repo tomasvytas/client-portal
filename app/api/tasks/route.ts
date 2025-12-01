@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateTaskBrief } from '@/lib/task-brief'
+import { getUserOrganizationIds } from '@/lib/organization'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,10 +11,55 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user to check role
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, isMasterAdmin: true },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Determine role (master_admin takes precedence)
+    const userRole = user.isMasterAdmin ? 'master_admin' : user.role
+
+    // Get organization IDs for filtering
+    const organizationIds = await getUserOrganizationIds(session.user.id, userRole)
+
+    // Build where clause
+    let whereClause: any = {}
+
+    if (organizationIds === null) {
+      // Master admin - see all tasks
+      whereClause = {}
+    } else if (organizationIds.length === 0) {
+      // No organizations - return empty
+      return NextResponse.json({ tasks: [] })
+    } else if (userRole === 'service_provider') {
+      // Service provider - see all tasks from their organization
+      whereClause = {
+        organizationId: { in: organizationIds },
+      }
+    } else {
+      // Client - see only their own tasks from their organizations
+      whereClause = {
+        userId: session.user.id,
+        organizationId: { in: organizationIds },
+      }
+    }
+
     const tasks = await prisma.task.findMany({
-      where: { userId: session.user.id },
+      where: whereClause,
       orderBy: { updatedAt: 'desc' },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
         messages: {
           orderBy: { createdAt: 'asc' },
           take: 1, // Just to check if there are messages
@@ -46,12 +92,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user to check role
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Get organization ID for the task
+    let organizationId: string | null = null
+
+    if (user.role === 'client') {
+      // Client - link to their primary organization
+      const clientProviders = await prisma.clientProvider.findFirst({
+        where: { clientId: session.user.id },
+        orderBy: { joinedAt: 'asc' },
+        select: { organizationId: true },
+      })
+      organizationId = clientProviders?.organizationId || null
+
+      if (!organizationId) {
+        return NextResponse.json(
+          { error: 'Client must be linked to a service provider organization' },
+          { status: 400 }
+        )
+      }
+    } else if (user.role === 'service_provider') {
+      // Service provider - link to their owned organization
+      const organization = await prisma.organization.findUnique({
+        where: { ownerId: session.user.id },
+        select: { id: true },
+      })
+      organizationId = organization?.id || null
+    }
+    // Master admin can create tasks without organization (for testing/admin purposes)
+
     const body = await request.json()
     const { title } = body
 
     const task = await prisma.task.create({
       data: {
         userId: session.user.id,
+        organizationId,
         title: title || 'New Task',
         clientEmail: session.user.email || undefined,
         clientName: session.user.name || undefined,
