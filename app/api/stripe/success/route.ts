@@ -106,7 +106,6 @@ export async function GET(request: NextRequest) {
       where: { id: session.user.id },
       data: {
         role: 'service_provider',
-        organizationId: organization.id,
       },
     })
 
