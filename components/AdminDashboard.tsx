@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase } from 'lucide-react'
+import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users } from 'lucide-react'
 import PricingManagement from './PricingManagement'
 import TaskTable from './TaskTable'
 import ServicesManagement from './ServicesManagement'
+import ClientsManagement from './ClientsManagement'
 
-type Tab = 'board' | 'pricing' | 'services' | 'settings'
+type Tab = 'board' | 'clients' | 'pricing' | 'services' | 'settings'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -138,6 +139,18 @@ export default function AdminDashboard() {
               <span className="sm:hidden">Tasks</span>
             </button>
             <button
+              onClick={() => setActiveTab('clients')}
+              className={`${
+                activeTab === 'clients'
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
+            >
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Clients</span>
+              <span className="sm:hidden">Clients</span>
+            </button>
+            <button
               onClick={() => setActiveTab('pricing')}
               className={`${
                 activeTab === 'pricing'
@@ -177,6 +190,7 @@ export default function AdminDashboard() {
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {activeTab === 'board' && <TaskTable />}
+        {activeTab === 'clients' && <ClientsManagement />}
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'services' && <ServicesManagement />}
         {activeTab === 'settings' && (
