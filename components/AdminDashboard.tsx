@@ -244,7 +244,12 @@ export default function AdminDashboard() {
             </button>
             {isMasterAdmin && (
               <button
-                onClick={() => setActiveTab('master')}
+                onClick={() => {
+                  if (isMasterAdmin) {
+                    setActiveTab('master')
+                    router.push('/admin?tab=master')
+                  }
+                }}
                 className={`${
                   activeTab === 'master'
                     ? 'border-[#007AFF] text-[#007AFF]'
