@@ -154,32 +154,9 @@ export default function MasterAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button and switch to admin */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => {
-              // Use window.location to change tab via URL
-              window.location.href = '/admin?tab=board'
-            }}
-            className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-colors text-[#8E8E93] hover:text-[#FFFFFF]"
-            title="Back to Task Board"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h2 className="text-[24px] font-bold text-[#FFFFFF]">Master Admin Dashboard</h2>
-        </div>
-        <button
-          onClick={() => {
-            // Switch to admin view (Task Board tab)
-            window.location.href = '/admin?tab=board'
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#007AFF]/10 hover:bg-[#007AFF]/20 text-[#007AFF] rounded-xl transition-colors text-[15px] font-semibold"
-          title="Go to Admin Dashboard"
-        >
-          <LayoutGrid className="w-4 h-4" />
-          Admin View
-        </button>
+      {/* Header */}
+      <div className="mb-4">
+        <h2 className="text-[24px] font-bold text-[#FFFFFF]">Master Admin Dashboard</h2>
       </div>
 
       {/* Stats Overview */}
