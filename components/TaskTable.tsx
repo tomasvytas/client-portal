@@ -233,9 +233,8 @@ export default function TaskTable() {
 
   return (
     <div className="space-y-6">
-      {/* Invite Code Badge */}
-      {organization && (
-        <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
+      {/* Invite Code Badge - Always visible for service providers */}
+      <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -245,71 +244,74 @@ export default function TaskTable() {
               <p className="text-[14px] text-[#8E8E93] mb-3">
                 Share your invite code or link with clients to join your organization
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl flex-1">
-                      <div className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">Invite Code</div>
-                      <div className="text-[20px] font-bold text-[#007AFF] font-mono">{organization.inviteCode}</div>
+              {organization ? (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl flex-1">
+                        <div className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">Invite Code</div>
+                        <div className="text-[20px] font-bold text-[#007AFF] font-mono">{organization.inviteCode}</div>
+                      </div>
+                      <button
+                        onClick={() => handleCopyInvite(organization.inviteCode, 'code')}
+                        className="px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                      >
+                        {copiedInvite === `code-${organization.inviteCode}` ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copy
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleCopyInvite(organization.inviteCode, 'code')}
-                      className="px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
-                    >
-                      {copiedInvite === `code-${organization.inviteCode}` ? (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy
-                        </>
-                      )}
-                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={organization.inviteLink}
+                        className="flex-1 px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[13px] font-mono truncate"
+                      />
+                      <button
+                        onClick={() => handleCopyInvite(organization.inviteLink, 'link')}
+                        className="px-4 py-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                      >
+                        {copiedInvite === `link-${organization.inviteLink}` ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copy Link
+                          </>
+                        )}
+                      </button>
+                      <a
+                        href={organization.inviteLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors"
+                        title="Open invite link"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={organization.inviteLink}
-                      className="flex-1 px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[13px] font-mono truncate"
-                    />
-                    <button
-                      onClick={() => handleCopyInvite(organization.inviteLink, 'link')}
-                      className="px-4 py-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors flex items-center gap-2 text-[14px] font-semibold"
-                    >
-                      {copiedInvite === `link-${organization.inviteLink}` ? (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          Copy Link
-                        </>
-                      )}
-                    </button>
-                    <a
-                      href={organization.inviteLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors"
-                      title="Open invite link"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <div className="text-[14px] text-[#8E8E93]">Loading invite information...</div>
+              )}
             </div>
           </div>
         </div>
-      )}
 
       <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
         <div className="p-6 border-b border-[#38383A]/30">
