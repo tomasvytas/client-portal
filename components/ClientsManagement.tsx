@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Calendar, Copy, CheckCircle, ExternalLink, Trash2, Loader2 } from 'lucide-react'
+import { User, Mail, Calendar, Copy, CheckCircle, ExternalLink, Trash2, Loader2, Building, Globe, FileText, ChevronDown, ChevronUp, Package } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface Client {
@@ -12,6 +12,21 @@ interface Client {
   _count: {
     tasks: number
   }
+}
+
+interface ClientDetail extends Client {
+  companyName: string | null
+  products: Array<{
+    id: string
+    name: string
+    websiteUrl: string | null
+    productType: string | null
+    brandGuidelines: string | null
+    analysisData: any
+    status: string
+    createdAt: string
+    updatedAt: string
+  }>
 }
 
 interface Organization {
@@ -33,6 +48,9 @@ export default function ClientsManagement() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [expandedClient, setExpandedClient] = useState<string | null>(null)
+  const [clientDetails, setClientDetails] = useState<Record<string, ClientDetail>>({})
+  const [loadingDetails, setLoadingDetails] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -255,53 +273,169 @@ export default function ClientsManagement() {
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
-                  <tr key={client.id} className="hover:bg-[#2C2C2E]/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#007AFF]/20 flex items-center justify-center">
-                          <User className="w-5 h-5 text-[#007AFF]" />
-                        </div>
-                        <div>
-                          <div className="text-[15px] font-semibold text-[#FFFFFF]">
-                            {client.name || 'Unnamed Client'}
-                          </div>
-                          {client.email && (
-                            <div className="text-[13px] text-[#8E8E93] flex items-center gap-1.5 mt-0.5">
-                              <Mail className="w-3.5 h-3.5" />
-                              {client.email}
+                clients.map((client) => {
+                  const isExpanded = expandedClient === client.id
+                  const details = clientDetails[client.id]
+                  const isLoading = loadingDetails === client.id
+
+                  return (
+                    <>
+                      <tr key={client.id} className="hover:bg-[#2C2C2E]/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleToggleClientDetails(client.id)}
+                              className="p-1 hover:bg-[#38383A] rounded transition-colors"
+                              title={isExpanded ? 'Hide details' : 'Show company & products'}
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-[#8E8E93]" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-[#8E8E93]" />
+                              )}
+                            </button>
+                            <div className="w-10 h-10 rounded-full bg-[#007AFF]/20 flex items-center justify-center">
+                              <User className="w-5 h-5 text-[#007AFF]" />
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-[15px] text-[#FFFFFF]">
-                        {client._count.tasks} task{client._count.tasks !== 1 ? 's' : ''}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-[15px] text-[#8E8E93] flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        {format(new Date(client.joinedAt), 'MMM d, yyyy')}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleRemoveClient(client.id)}
-                        disabled={deleting === client.id}
-                        className="p-2 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors disabled:opacity-50"
-                        title="Remove client"
-                      >
-                        {deleting === client.id ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-5 h-5" />
-                        )}
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                            <div>
+                              <div className="text-[15px] font-semibold text-[#FFFFFF]">
+                                {client.name || 'Unnamed Client'}
+                              </div>
+                              {client.email && (
+                                <div className="text-[13px] text-[#8E8E93] flex items-center gap-1.5 mt-0.5">
+                                  <Mail className="w-3.5 h-3.5" />
+                                  {client.email}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#FFFFFF]">
+                            {client._count.tasks} task{client._count.tasks !== 1 ? 's' : ''}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#8E8E93] flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4" />
+                            {format(new Date(client.joinedAt), 'MMM d, yyyy')}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => handleRemoveClient(client.id)}
+                            disabled={deleting === client.id}
+                            className="p-2 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors disabled:opacity-50"
+                            title="Remove client"
+                          >
+                            {deleting === client.id ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-5 h-5" />
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-6 bg-[#2C2C2E]/30">
+                            {isLoading ? (
+                              <div className="flex items-center justify-center py-8">
+                                <Loader2 className="w-6 h-6 text-[#007AFF] animate-spin" />
+                                <span className="ml-3 text-[#8E8E93]">Loading client details...</span>
+                              </div>
+                            ) : details ? (
+                              <div className="space-y-6">
+                                {/* Company Information */}
+                                <div className="bg-[#1C1C1E] rounded-xl p-4 border border-[#38383A]/30">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Building className="w-5 h-5 text-[#007AFF]" />
+                                    <h3 className="text-[17px] font-semibold text-[#FFFFFF]">Company Information</h3>
+                                  </div>
+                                  {details.companyName ? (
+                                    <p className="text-[15px] text-[#FFFFFF]">{details.companyName}</p>
+                                  ) : (
+                                    <p className="text-[14px] text-[#8E8E93]">No company registered</p>
+                                  )}
+                                </div>
+
+                                {/* Products Analysis */}
+                                <div className="bg-[#1C1C1E] rounded-xl p-4 border border-[#38383A]/30">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Package className="w-5 h-5 text-[#30D158]" />
+                                    <h3 className="text-[17px] font-semibold text-[#FFFFFF]">
+                                      Product Analysis ({details.products?.length || 0})
+                                    </h3>
+                                  </div>
+                                  {details.products && details.products.length > 0 ? (
+                                    <div className="space-y-4">
+                                      {details.products.map((product) => (
+                                        <div key={product.id} className="bg-[#2C2C2E] rounded-lg p-4 border border-[#38383A]/30">
+                                          <div className="flex items-start justify-between mb-2">
+                                            <div className="flex-1">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <h4 className="text-[16px] font-semibold text-[#FFFFFF]">{product.name}</h4>
+                                                {product.productType && (
+                                                  <span className="px-2 py-0.5 bg-[#007AFF]/20 text-[#007AFF] text-[11px] font-semibold rounded">
+                                                    {product.productType}
+                                                  </span>
+                                                )}
+                                                <span className={`px-2 py-0.5 text-[11px] font-semibold rounded ${
+                                                  product.status === 'completed' 
+                                                    ? 'bg-[#30D158]/20 text-[#30D158]'
+                                                    : product.status === 'analyzing'
+                                                    ? 'bg-[#007AFF]/20 text-[#007AFF]'
+                                                    : 'bg-[#8E8E93]/20 text-[#8E8E93]'
+                                                }`}>
+                                                  {product.status}
+                                                </span>
+                                              </div>
+                                              {product.websiteUrl && (
+                                                <div className="flex items-center gap-1.5 text-[13px] text-[#8E8E93] mb-2">
+                                                  <Globe className="w-3.5 h-3.5" />
+                                                  <a
+                                                    href={product.websiteUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="hover:text-[#007AFF] transition-colors"
+                                                  >
+                                                    {product.websiteUrl}
+                                                  </a>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                          {product.brandGuidelines && product.status === 'completed' && (
+                                            <div className="mt-3 pt-3 border-t border-[#38383A]/30">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <FileText className="w-4 h-4 text-[#8E8E93]" />
+                                                <span className="text-[13px] font-semibold text-[#8E8E93] uppercase">Brand Guidelines</span>
+                                              </div>
+                                              <div className="text-[14px] text-[#FFFFFF] line-clamp-3">
+                                                {product.brandGuidelines.substring(0, 300)}
+                                                {product.brandGuidelines.length > 300 && '...'}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-[14px] text-[#8E8E93]">No products analyzed yet</p>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center py-8 text-[#8E8E93]">
+                                Failed to load client details
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )
+                })
               )}
             </tbody>
           </table>
