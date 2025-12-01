@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
+
+// Generate unique invite code
+function generateInviteCode(): string {
+  return randomBytes(8).toString('hex').toUpperCase()
+}
+
+// Generate URL-friendly slug from name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .substring(0, 50)
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, name } = body
+    const { email, password, name, role, inviteCode, organizationName, subscriptionPlan } = body
 
     if (!email || !password) {
       return NextResponse.json(
@@ -19,6 +34,38 @@ export async function POST(request: NextRequest) {
         { error: 'Password must be at least 6 characters' },
         { status: 400 }
       )
+    }
+
+    // Validate role
+    if (role && !['client', 'service_provider'].includes(role)) {
+      return NextResponse.json(
+        { error: 'Invalid role. Must be "client" or "service_provider"' },
+        { status: 400 }
+      )
+    }
+
+    // For clients, invite code is required
+    if (role === 'client' && !inviteCode) {
+      return NextResponse.json(
+        { error: 'Invite code is required for client registration' },
+        { status: 400 }
+      )
+    }
+
+    // For service providers, organization name and subscription plan are required
+    if (role === 'service_provider') {
+      if (!organizationName) {
+        return NextResponse.json(
+          { error: 'Organization name is required for service provider registration' },
+          { status: 400 }
+        )
+      }
+      if (!subscriptionPlan) {
+        return NextResponse.json(
+          { error: 'Subscription plan is required for service provider registration' },
+          { status: 400 }
+        )
+      }
     }
 
     // Check if user already exists
@@ -36,23 +83,25 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
+    // Create user with role
+    const userRole = role || 'client'
     const user = await prisma.user.create({
       data: {
         email,
         name: name || null,
         emailVerified: null,
+        role: userRole,
       },
     })
 
-    // Create credentials account (store hashed password in refresh_token field as workaround)
+    // Create credentials account
     await prisma.account.create({
       data: {
         userId: user.id,
         type: 'credentials',
         provider: 'credentials',
         providerAccountId: user.id,
-        refresh_token: hashedPassword, // Store password hash here
+        refresh_token: hashedPassword,
         access_token: null,
         expires_at: null,
         token_type: null,
@@ -62,12 +111,139 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // If service provider, create organization and subscription
+    if (userRole === 'service_provider') {
+      const slug = generateSlug(organizationName)
+      const inviteCode = generateInviteCode()
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+      const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
+
+      // Check if slug already exists
+      const existingOrg = await prisma.organization.findUnique({
+        where: { slug },
+      })
+
+      let finalSlug = slug
+      if (existingOrg) {
+        finalSlug = `${slug}-${Date.now()}`
+      }
+
+      // Calculate subscription dates
+      const now = new Date()
+      let periodEnd = new Date()
+      if (subscriptionPlan === '1_month') {
+        periodEnd.setMonth(periodEnd.getMonth() + 1)
+      } else if (subscriptionPlan === '3_month') {
+        periodEnd.setMonth(periodEnd.getMonth() + 3)
+      } else if (subscriptionPlan === '6_month') {
+        periodEnd.setMonth(periodEnd.getMonth() + 6)
+      }
+
+      // Create organization
+      const organization = await prisma.organization.create({
+        data: {
+          name: organizationName,
+          slug: finalSlug,
+          ownerId: user.id,
+          inviteCode,
+          inviteLink,
+        },
+      })
+
+      // Create subscription
+      await prisma.subscription.create({
+        data: {
+          organizationId: organization.id,
+          plan: subscriptionPlan,
+          status: 'active',
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          clientCount: 0,
+        },
+      })
+
+      return NextResponse.json({
+        message: 'Service provider account created successfully',
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        organization: {
+          id: organization.id,
+          name: organization.name,
+          inviteCode: organization.inviteCode,
+          inviteLink: organization.inviteLink,
+        },
+      })
+    }
+
+    // If client, link to organization via invite code
+    if (userRole === 'client' && inviteCode) {
+      const organization = await prisma.organization.findUnique({
+        where: { inviteCode },
+      })
+
+      if (!organization) {
+        return NextResponse.json(
+          { error: 'Invalid invite code' },
+          { status: 400 }
+        )
+      }
+
+      // Check subscription status
+      const subscription = await prisma.subscription.findUnique({
+        where: { organizationId: organization.id },
+      })
+
+      if (!subscription || subscription.status !== 'active') {
+        return NextResponse.json(
+          { error: 'This service provider\'s subscription is not active' },
+          { status: 400 }
+        )
+      }
+
+      // Link client to organization
+      await prisma.clientProvider.create({
+        data: {
+          clientId: user.id,
+          organizationId: organization.id,
+        },
+      })
+
+      // Update client count
+      await prisma.subscription.update({
+        where: { organizationId: organization.id },
+        data: {
+          clientCount: {
+            increment: 1,
+          },
+        },
+      })
+
+      return NextResponse.json({
+        message: 'Client account created and linked successfully',
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        organization: {
+          id: organization.id,
+          name: organization.name,
+        },
+      })
+    }
+
     return NextResponse.json({
       message: 'Account created successfully',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role,
       },
     })
   } catch (error: any) {

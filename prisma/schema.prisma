@@ -43,11 +43,14 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          String    @default("client") // client, admin
+  role          String    @default("client") // client, service_provider, master_admin
+  isMasterAdmin Boolean   @default(false) // Master admin can see all accounts
+  ownedOrganization Organization? @relation("OrganizationOwner") // Organization owned by this user (service provider)
   accounts      Account[]
   sessions      Session[]
   tasks         Task[]
   products      Product[]
+  clientProviders ClientProvider[] // Clients linked to service providers
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -64,6 +67,8 @@ model Task {
   id          String    @id @default(cuid())
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String? // Service provider organization this task belongs to
+  organization  Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   title       String?
   status      String    @default("draft") // draft, in_progress, completed, cancelled
   clientName  String?
@@ -119,6 +124,8 @@ model Pricing {
 
 model Service {
   id          String   @id @default(cuid())
+  organizationId String? // Service provider organization
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name        String   // e.g., "Video Production", "Graphic Design", "Web Development"
   description String?  @db.Text // Brief description of the service
   keywords    String[] // Keywords to help AI identify service requests (e.g., ["video", "film", "animation"])
@@ -131,6 +138,8 @@ model Product {
   id              String   @id @default(cuid())
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId  String?  // Service provider organization
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   name            String   // Product/brand name
   websiteUrl      String?  // Brand website URL
   productType     String?  // Type/category of product (inferred from analysis)
@@ -143,4 +152,55 @@ model Product {
 
   @@index([userId])
   @@index([name])
+}
+
+// Organization/Service Provider model
+model Organization {
+  id              String   @id @default(cuid())
+  name            String   // Organization/service provider name
+  slug            String   @unique // URL-friendly identifier
+  ownerId        String   @unique // User who owns this organization (service provider)
+  owner          User     @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  inviteCode     String   @unique // Unique code for clients to join
+  inviteLink     String   @unique // Generated invite link
+  subscription   Subscription?
+  tasks           Task[]
+  products        Product[]
+  clientProviders ClientProvider[] // Clients linked to this organization
+  services        Service[] // Services offered by this organization
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([inviteCode])
+}
+
+// Subscription model for service providers
+model Subscription {
+  id              String   @id @default(cuid())
+  organizationId  String   @unique
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan            String   // "1_month", "3_month", "6_month"
+  status          String   @default("active") // active, cancelled, expired
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  clientCount     Int      @default(0) // Number of clients
+  stripeCustomerId String? // Stripe customer ID
+  stripeSubscriptionId String? // Stripe subscription ID
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Client-Provider relationship (many-to-many)
+model ClientProvider {
+  id             String   @id @default(cuid())
+  clientId       String
+  client         User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime @default(now())
+
+  @@unique([clientId, organizationId])
+  @@index([clientId])
+  @@index([organizationId])
 }

@@ -1,18 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [role, setRole] = useState<'client' | 'service_provider' | ''>('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [organizationName, setOrganizationName] = useState('')
+  const [subscriptionPlan, setSubscriptionPlan] = useState<'1_month' | '3_month' | '6_month' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Check for invite code in URL
+  useEffect(() => {
+    const invite = searchParams?.get('invite')
+    if (invite) {
+      setInviteCode(invite)
+      setRole('client')
+      setIsSignUp(true)
+    }
+  }, [searchParams])
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,11 +36,38 @@ export default function SignInPage() {
 
     try {
       if (isSignUp) {
+        // Validate required fields based on role
+        if (!role) {
+          setError('Please select whether you are a Service Provider or Client')
+          setLoading(false)
+          return
+        }
+
+        if (role === 'service_provider' && (!organizationName || !subscriptionPlan)) {
+          setError('Please provide organization name and select a subscription plan')
+          setLoading(false)
+          return
+        }
+
+        if (role === 'client' && !inviteCode) {
+          setError('Please enter an invite code to join a service provider')
+          setLoading(false)
+          return
+        }
+
         // Sign up - create account via API
         const response = await fetch('/api/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, name }),
+          body: JSON.stringify({ 
+            email, 
+            password, 
+            name, 
+            role,
+            inviteCode: role === 'client' ? inviteCode : undefined,
+            organizationName: role === 'service_provider' ? organizationName : undefined,
+            subscriptionPlan: role === 'service_provider' ? subscriptionPlan : undefined,
+          }),
         })
 
         const data = await response.json()
@@ -96,20 +138,165 @@ export default function SignInPage() {
           {/* Email/Password Form */}
           <form onSubmit={handleEmailAuth} className="mb-6 space-y-4">
             {isSignUp && (
-              <div>
-                <label htmlFor="name" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required={isSignUp}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
-                  placeholder="John Doe"
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="name" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required={isSignUp}
+                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                {/* Role Selection */}
+                <div>
+                  <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-3">
+                    I am a...
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRole('service_provider')
+                        setInviteCode('')
+                        setError('')
+                      }}
+                      className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                        role === 'service_provider'
+                          ? 'border-[#007AFF] bg-[#007AFF]/10 text-[#007AFF]'
+                          : 'border-[#38383A] bg-[#2C2C2E] text-[#FFFFFF] hover:border-[#38383A]/70'
+                      }`}
+                    >
+                      <div className="text-[15px] font-semibold">Service Provider</div>
+                      <div className="text-[13px] text-[#8E8E93] mt-1">I offer services</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRole('client')
+                        setOrganizationName('')
+                        setSubscriptionPlan('')
+                        setError('')
+                      }}
+                      className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                        role === 'client'
+                          ? 'border-[#007AFF] bg-[#007AFF]/10 text-[#007AFF]'
+                          : 'border-[#38383A] bg-[#2C2C2E] text-[#FFFFFF] hover:border-[#38383A]/70'
+                      }`}
+                    >
+                      <div className="text-[15px] font-semibold">Client</div>
+                      <div className="text-[13px] text-[#8E8E93] mt-1">I need services</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Service Provider Fields */}
+                {role === 'service_provider' && (
+                  <>
+                    <div>
+                      <label htmlFor="organizationName" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                        Organization Name
+                      </label>
+                      <input
+                        id="organizationName"
+                        type="text"
+                        value={organizationName}
+                        onChange={(e) => setOrganizationName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                        placeholder="My Creative Agency"
+                      />
+                    </div>
+
+                    {/* Subscription Plans */}
+                    <div>
+                      <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-3">
+                        Choose Subscription Plan
+                      </label>
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => setSubscriptionPlan('1_month')}
+                          className={`w-full px-4 py-4 rounded-xl border-2 text-left transition-all ${
+                            subscriptionPlan === '1_month'
+                              ? 'border-[#007AFF] bg-[#007AFF]/10'
+                              : 'border-[#38383A] bg-[#2C2C2E] hover:border-[#38383A]/70'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="text-[15px] font-semibold text-[#FFFFFF]">1 Month</div>
+                              <div className="text-[13px] text-[#8E8E93] mt-1">€50/month + €10 per client</div>
+                            </div>
+                            <div className="text-[17px] font-bold text-[#007AFF]">€50</div>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSubscriptionPlan('3_month')}
+                          className={`w-full px-4 py-4 rounded-xl border-2 text-left transition-all ${
+                            subscriptionPlan === '3_month'
+                              ? 'border-[#007AFF] bg-[#007AFF]/10'
+                              : 'border-[#38383A] bg-[#2C2C2E] hover:border-[#38383A]/70'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="text-[15px] font-semibold text-[#FFFFFF]">3 Months</div>
+                              <div className="text-[13px] text-[#8E8E93] mt-1">€35/month + €8 per client</div>
+                            </div>
+                            <div className="text-[17px] font-bold text-[#007AFF]">€105</div>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSubscriptionPlan('6_month')}
+                          className={`w-full px-4 py-4 rounded-xl border-2 text-left transition-all ${
+                            subscriptionPlan === '6_month'
+                              ? 'border-[#007AFF] bg-[#007AFF]/10'
+                              : 'border-[#38383A] bg-[#2C2C2E] hover:border-[#38383A]/70'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="text-[15px] font-semibold text-[#FFFFFF]">6 Months</div>
+                              <div className="text-[13px] text-[#8E8E93] mt-1">€25/month + €7 per client</div>
+                            </div>
+                            <div className="text-[17px] font-bold text-[#007AFF]">€150</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Client Fields */}
+                {role === 'client' && (
+                  <div>
+                    <label htmlFor="inviteCode" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                      Invite Code
+                    </label>
+                    <input
+                      id="inviteCode"
+                      type="text"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                      required
+                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all uppercase"
+                      placeholder="ENTER INVITE CODE"
+                    />
+                    <p className="text-[13px] text-[#8E8E93] mt-2">
+                      Get this code from your service provider
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             <div>
@@ -204,6 +391,10 @@ export default function SignInPage() {
                 setEmail('')
                 setPassword('')
                 setName('')
+                setRole('')
+                setInviteCode('')
+                setOrganizationName('')
+                setSubscriptionPlan('')
               }}
               className="text-[#007AFF] hover:text-[#0051D5] text-[15px] font-medium transition-colors"
             >
