@@ -392,6 +392,52 @@ export default function AdminDashboard() {
               )}
             </div>
 
+            {/* Master Admin Setup */}
+            {!isMasterAdmin && (
+              <div className="pt-8 border-t border-[#38383A]/30 mb-8">
+                <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Master Admin Access</h3>
+                <p className="text-[14px] text-[#8E8E93] mb-4">
+                  Enable master admin access to view all organizations, clients, and platform statistics.
+                </p>
+                <button
+                  onClick={async () => {
+                    if (!confirm('This will set your account as master admin. Continue?')) return
+                    
+                    try {
+                      const session = await fetch('/api/auth/session').then(r => r.json())
+                      const email = session?.user?.email
+                      
+                      if (!email) {
+                        alert('Could not get your email. Please use the script instead.')
+                        return
+                      }
+
+                      const res = await fetch('/api/admin/set-master-admin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email }),
+                      })
+
+                      const data = await res.json()
+
+                      if (res.ok) {
+                        alert('Master admin access enabled! Please refresh the page.')
+                        window.location.reload()
+                      } else {
+                        alert(data.error || 'Failed to set master admin')
+                      }
+                    } catch (error) {
+                      console.error('Error:', error)
+                      alert('Failed to set master admin')
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[15px] font-semibold"
+                >
+                  Enable Master Admin Access
+                </button>
+              </div>
+            )}
+
             {/* Database Migration */}
             <div className="pt-8 border-t border-[#38383A]/30">
               <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Database Migration</h3>
