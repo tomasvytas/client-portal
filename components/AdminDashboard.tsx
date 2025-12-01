@@ -15,6 +15,7 @@ type Tab = 'board' | 'clients' | 'pricing' | 'services' | 'settings' | 'master'
 export default function AdminDashboard() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState<Tab>('board')
   const [driveAuthUrl, setDriveAuthUrl] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
@@ -37,7 +38,7 @@ export default function AdminDashboard() {
       })
       .catch(() => setIsMasterAdmin(false))
 
-    // Fetch organization info for invite code (even if master admin, they might also be a service provider)
+    // Fetch organization info for invite code (even if admin, they might also be a service provider)
     fetch('/api/admin/organization')
       .then(res => res.json())
       .then(data => {
@@ -241,8 +242,8 @@ export default function AdminDashboard() {
                 } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
               >
                 <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Master Admin</span>
-                <span className="sm:hidden">Master</span>
+                <span className="hidden sm:inline">Admin</span>
+                <span className="sm:hidden">Admin</span>
               </button>
             )}
             <button
@@ -358,7 +359,7 @@ export default function AdminDashboard() {
                     <p className="text-[15px] text-[#FFFFFF] capitalize">
                       {userInfo.role === 'service_provider' ? 'Service Provider' : 
                        userInfo.role === 'client' ? 'Client' : 
-                       userInfo.role === 'master_admin' ? 'Master Admin' : userInfo.role}
+                       userInfo.role === 'master_admin' ? 'Admin' : userInfo.role}
                     </p>
                   </div>
                   {userInfo.organization?.subscription && (
@@ -522,17 +523,17 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Master Admin Setup / Unauthorize */}
+            {/* Admin Access Setup / Unauthorize */}
             <div className="pt-8 border-t border-[#38383A]/30 mb-8">
               {!isMasterAdmin ? (
                 <>
-                  <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Master Admin Access</h3>
+                  <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Admin Access</h3>
                   <p className="text-[14px] text-[#8E8E93] mb-4">
-                    Enable master admin access to view all organizations, clients, and platform statistics.
+                    Enable admin access to view all organizations, clients, and platform statistics.
                   </p>
                   <button
                     onClick={async () => {
-                      if (!confirm('This will set your account as master admin. Continue?')) return
+                      if (!confirm('This will set your account as admin. Continue?')) return
                       
                       try {
                         const session = await fetch('/api/auth/session').then(r => r.json())
@@ -552,30 +553,30 @@ export default function AdminDashboard() {
                         const data = await res.json()
 
                         if (res.ok) {
-                          alert('Master admin access enabled! Please refresh the page.')
+                          alert('Admin access enabled! Please refresh the page.')
                           window.location.reload()
                         } else {
-                          alert(data.error || 'Failed to set master admin')
+                          alert(data.error || 'Failed to set admin')
                         }
                       } catch (error) {
                         console.error('Error:', error)
-                        alert('Failed to set master admin')
+                        alert('Failed to set admin')
                       }
                     }}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[15px] font-semibold"
                   >
-                    Authorize as Master Admin
+                    Authorize as Admin
                   </button>
                 </>
               ) : (
                 <>
-                  <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Master Admin Access</h3>
+                  <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Admin Access</h3>
                   <p className="text-[14px] text-[#8E8E93] mb-4">
-                    You currently have master admin access. Click below to return to your regular admin view.
+                    You currently have admin access. Click below to return to your regular admin view.
                   </p>
                   <button
                     onClick={async () => {
-                      if (!confirm('This will remove your master admin access. Continue?')) return
+                      if (!confirm('This will remove your admin access. Continue?')) return
                       
                       try {
                         const res = await fetch('/api/admin/unauthorize-master-admin', {
@@ -586,19 +587,19 @@ export default function AdminDashboard() {
                         const data = await res.json()
 
                         if (res.ok) {
-                          alert('Master admin access removed! Please refresh the page.')
+                          alert('Admin access removed! Please refresh the page.')
                           window.location.reload()
                         } else {
-                          alert(data.error || 'Failed to remove master admin access')
+                          alert(data.error || 'Failed to remove admin access')
                         }
                       } catch (error) {
                         console.error('Error:', error)
-                        alert('Failed to remove master admin access')
+                        alert('Failed to remove admin access')
                       }
                     }}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF3B30] text-[#FFFFFF] rounded-xl hover:bg-[#FF3B30]/80 transition-colors text-[15px] font-semibold"
                   >
-                    Unauthorize Master Admin
+                    Unauthorize Admin
                   </button>
                 </>
               )}
