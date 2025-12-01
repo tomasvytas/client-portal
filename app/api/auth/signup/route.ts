@@ -150,32 +150,18 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Create subscription
-      await prisma.subscription.create({
-        data: {
-          organizationId: organization.id,
-          plan: subscriptionPlan,
-          status: 'active',
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
-          clientCount: 0,
-        },
-      })
-
+      // For service providers, return user info - organization will be created after payment
       return NextResponse.json({
-        message: 'Service provider account created successfully',
+        message: 'Account created. Redirecting to payment...',
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: 'service_provider',
         },
-        organization: {
-          id: organization.id,
-          name: organization.name,
-          inviteCode: organization.inviteCode,
-          inviteLink: organization.inviteLink,
-        },
+        requiresPayment: true,
+        organizationName,
+        subscriptionPlan,
       })
     }
 

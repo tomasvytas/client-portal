@@ -87,6 +87,34 @@ function SignInForm() {
           throw new Error('Failed to sign in after signup')
         }
 
+        // If service provider, redirect to payment checkout
+        if (data.requiresPayment && data.organizationName && data.subscriptionPlan) {
+          try {
+            const checkoutRes = await fetch('/api/stripe/create-checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                organizationName: data.organizationName,
+                subscriptionPlan: data.subscriptionPlan,
+              }),
+            })
+
+            const checkoutData = await checkoutRes.json()
+
+            if (checkoutRes.ok && checkoutData.checkoutUrl) {
+              window.location.href = checkoutData.checkoutUrl
+              return
+            } else {
+              throw new Error(checkoutData.error || 'Failed to create checkout session')
+            }
+          } catch (checkoutError: any) {
+            console.error('Checkout error:', checkoutError)
+            setError(checkoutError.message || 'Failed to start payment process')
+            setLoading(false)
+            return
+          }
+        }
+
         router.push('/')
       } else {
         // Sign in
