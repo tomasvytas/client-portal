@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { Package, Plus, X, Building2, FileText, DollarSign, TrendingUp, Globe, Building } from 'lucide-react'
+import { Package, Plus, X, Building2, FileText, DollarSign, TrendingUp, Globe, Building, Settings, Sparkles } from 'lucide-react'
 import PortalSelector from './PortalSelector'
+import ClientSettings from './ClientSettings'
 
 interface Task {
   id: string
@@ -54,6 +55,7 @@ export default function Dashboard() {
   const [productWebsite, setProductWebsite] = useState('')
   const [productName, setProductName] = useState('')
   const [addingProduct, setAddingProduct] = useState(false)
+  const [activeTab, setActiveTab] = useState<'tasks' | 'settings'>('tasks')
 
   useEffect(() => {
     checkAdminStatus()
@@ -324,32 +326,115 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Statistics Cards */}
-        {!loadingStats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
-            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
-              <div className="flex items-center justify-between mb-4">
-                <FileText className="w-8 h-8 text-[#007AFF]" />
-              </div>
-              <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
-                {stats?.totalTasks || 0}
-              </div>
-              <div className="text-[15px] text-[#8E8E93]">Total Tasks</div>
-            </div>
-            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
-              <div className="flex items-center justify-between mb-4">
-                <DollarSign className="w-8 h-8 text-[#30D158]" />
-              </div>
-              <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
-                {formatPrice(stats?.totalSpending || 0)}
-              </div>
-              <div className="text-[15px] text-[#8E8E93]">Total Spending</div>
-            </div>
-          </div>
-        )}
+        {/* Tabs */}
+        <div className="mb-6 border-b border-[#38383A]/50">
+          <nav className="flex space-x-4 sm:space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className={`${
+                activeTab === 'tasks'
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
+            >
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              Tasks
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`${
+                activeTab === 'settings'
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
+            >
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+              Settings
+            </button>
+          </nav>
+        </div>
 
-        {/* Provider Tabs */}
-        {providers.length > 0 && (
+        {activeTab === 'settings' ? (
+          <ClientSettings />
+        ) : (
+          <>
+            {/* Statistics Cards */}
+            {!loadingStats && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
+                <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <FileText className="w-8 h-8 text-[#007AFF]" />
+                  </div>
+                  <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                    {stats?.totalTasks || 0}
+                  </div>
+                  <div className="text-[15px] text-[#8E8E93]">Total Tasks</div>
+                </div>
+                <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <DollarSign className="w-8 h-8 text-[#30D158]" />
+                  </div>
+                  <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                    {formatPrice(stats?.totalSpending || 0)}
+                  </div>
+                  <div className="text-[15px] text-[#8E8E93]">Total Spending</div>
+                </div>
+              </div>
+            )}
+
+            {/* Onboarding Prompts */}
+            {!loadingStats && (
+              <>
+                {/* Company Registration Prompt */}
+                {!stats?.companyName && (
+                  <div className="mb-6 bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-[#007AFF]/20 rounded-xl">
+                        <Building2 className="w-6 h-6 text-[#007AFF]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-[18px] font-semibold text-[#FFFFFF] mb-2">Register Your Company</h3>
+                        <p className="text-[14px] text-[#8E8E93] mb-4">
+                          Complete your profile by registering your company name. This helps service providers understand your business better.
+                        </p>
+                        <button
+                          onClick={() => setShowCompanyModal(true)}
+                          className="px-6 py-2.5 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[15px] font-semibold"
+                        >
+                          Register Company
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Product Website Prompt */}
+                {providers.length > 0 && (
+                  <div className="mb-6 bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 rounded-2xl p-6 border border-[#30D158]/20">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-[#30D158]/20 rounded-xl">
+                        <Sparkles className="w-6 h-6 text-[#30D158]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-[18px] font-semibold text-[#FFFFFF] mb-2">Add Your Product for Analysis</h3>
+                        <p className="text-[14px] text-[#8E8E93] mb-4">
+                          Add your product website to get AI-powered analysis. This helps service providers understand your brand and create better briefs.
+                        </p>
+                        <button
+                          onClick={() => setShowProductWebsiteModal(true)}
+                          className="px-6 py-2.5 bg-[#30D158] text-[#FFFFFF] rounded-xl hover:bg-[#28A745] transition-colors text-[15px] font-semibold"
+                        >
+                          Add Product
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Provider Tabs */}
+            {providers.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
               {providers.map((provider) => (
@@ -428,29 +513,29 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <h2 className="text-[24px] sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight">
-            {selectedProviderId ? providers.find(p => p.id === selectedProviderId)?.name + ' Tasks' : 'Your Tasks'}
-          </h2>
-          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-            <button
-              onClick={() => router.push('/products')}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#2C2C2E] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#38383A] transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
-            >
-              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Products</span>
-            </button>
-            <button
-              onClick={createNewTask}
-              disabled={creating || !selectedProviderId}
-              className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
-            >
-              {creating ? 'Creating...' : <><span className="hidden sm:inline">+ New Task Chat</span><span className="sm:hidden">+ New</span></>}
-            </button>
-          </div>
-        </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+              <h2 className="text-[24px] sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight">
+                {selectedProviderId ? providers.find(p => p.id === selectedProviderId)?.name + ' Tasks' : 'Your Tasks'}
+              </h2>
+              <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => router.push('/products')}
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#2C2C2E] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#38383A] transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
+                >
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Products</span>
+                </button>
+                <button
+                  onClick={createNewTask}
+                  disabled={creating || !selectedProviderId}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#007AFF] text-[#FFFFFF] text-[14px] sm:text-[15px] font-semibold rounded-xl hover:bg-[#0051D5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
+                >
+                  {creating ? 'Creating...' : <><span className="hidden sm:inline">+ New Task Chat</span><span className="sm:hidden">+ New</span></>}
+                </button>
+              </div>
+            </div>
 
-        {providers.length === 0 ? (
+            {providers.length === 0 ? (
           <div className="bg-[#1C1C1E] rounded-2xl p-16 text-center border border-[#38383A]/30">
             <p className="text-[#8E8E93] text-[17px] mb-6">You're not linked to any service providers yet.</p>
             <button
@@ -535,10 +620,10 @@ export default function Dashboard() {
                 )}
               </div>
             ))}
-          </div>
-        )}
+            </div>
+            )}
 
-        {/* Company Registration Modal */}
+            {/* Company Registration Modal */}
         {showCompanyModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCompanyModal(false)}>
             <div className="bg-[#1C1C1E] rounded-2xl p-6 max-w-md w-full border border-[#38383A]/50" onClick={(e) => e.stopPropagation()}>
@@ -646,6 +731,8 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>
