@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft } from 'lucide-react'
+import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 
@@ -33,11 +33,32 @@ interface Organization {
   createdAt: string
 }
 
+interface User {
+  id: string
+  name: string | null
+  email: string | null
+  role: string
+  isMasterAdmin: boolean
+  organization: {
+    id: string
+    name: string
+  } | null
+  _count: {
+    tasks: number
+    products: number
+    clientProviders: number
+  }
+  createdAt: string
+}
+
 export default function MasterAdminDashboard() {
   const router = useRouter()
   const [stats, setStats] = useState<Stats | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'organizations' | 'users'>('organizations')
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -45,9 +66,10 @@ export default function MasterAdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [statsRes, orgsRes] = await Promise.all([
+      const [statsRes, orgsRes, usersRes] = await Promise.all([
         fetch('/api/master-admin/stats'),
         fetch('/api/master-admin/organizations'),
+        fetch('/api/master-admin/users'),
       ])
 
       if (statsRes.ok) {
@@ -59,10 +81,41 @@ export default function MasterAdminDashboard() {
         const orgsData = await orgsRes.json()
         setOrganizations(orgsData.organizations || [])
       }
+
+      if (usersRes.ok) {
+        const usersData = await usersRes.json()
+        setUsers(usersData.users || [])
+      }
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string, userEmail: string | null) => {
+    if (!confirm(`Are you sure you want to delete user ${userEmail || userId}? This action cannot be undone and will delete all associated data.`)) {
+      return
+    }
+
+    setDeleting(userId)
+    try {
+      const res = await fetch(`/api/master-admin/users/${userId}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        // Refresh users list
+        fetchData()
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to delete user')
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('Failed to delete user')
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -163,11 +216,39 @@ export default function MasterAdminDashboard() {
         </div>
       </div>
 
-      {/* Organizations Table */}
+      {/* Tabs */}
       <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
-        <div className="p-6 border-b border-[#38383A]/30">
-          <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Organizations</h2>
+        <div className="border-b border-[#38383A]/30">
+          <nav className="flex">
+            <button
+              onClick={() => setActiveTab('organizations')}
+              className={`flex-1 px-6 py-4 text-[15px] font-semibold transition-colors ${
+                activeTab === 'organizations'
+                  ? 'border-b-2 border-[#007AFF] text-[#007AFF]'
+                  : 'text-[#8E8E93] hover:text-[#FFFFFF]'
+              }`}
+            >
+              Organizations
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`flex-1 px-6 py-4 text-[15px] font-semibold transition-colors ${
+                activeTab === 'users'
+                  ? 'border-b-2 border-[#007AFF] text-[#007AFF]'
+                  : 'text-[#8E8E93] hover:text-[#FFFFFF]'
+              }`}
+            >
+              Users
+            </button>
+          </nav>
         </div>
+
+        {/* Organizations Tab */}
+        {activeTab === 'organizations' && (
+          <div>
+            <div className="p-6 border-b border-[#38383A]/30">
+              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Organizations</h2>
+            </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -249,6 +330,101 @@ export default function MasterAdminDashboard() {
             </tbody>
           </table>
         </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <div>
+            <div className="p-6 border-b border-[#38383A]/30">
+              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Users</h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-[#2C2C2E]">
+                  <tr>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Name</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Email</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Role</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Organization</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Tasks</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Products</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Created</th>
+                    <th className="px-6 py-4 text-[15px] font-semibold text-[#FFFFFF]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#38383A]/30">
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-[#8E8E93] text-[15px]">
+                        No users found
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user) => (
+                      <tr key={user.id} className="hover:bg-[#2C2C2E]/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] font-semibold text-[#FFFFFF]">
+                            {user.name || 'N/A'}
+                            {user.isMasterAdmin && (
+                              <span className="ml-2 px-2 py-0.5 bg-[#FF9500]/20 text-[#FF9500] text-[11px] font-semibold rounded">
+                                MASTER
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#FFFFFF]">{user.email || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#FFFFFF] capitalize">
+                            {user.role.replace('_', ' ')}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#8E8E93]">
+                            {user.organization?.name || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#FFFFFF]">
+                            {user._count.tasks}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#FFFFFF]">
+                            {user._count.products}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-[15px] text-[#8E8E93] flex items-center gap-1.5">
+                            <Calendar className="w-4 h-4" />
+                            {format(new Date(user.createdAt), 'MMM d, yyyy')}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.email)}
+                            className="p-2 text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors"
+                            title="Delete user"
+                            disabled={deleting === user.id}
+                          >
+                            {deleting === user.id ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-5 h-5" />
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
