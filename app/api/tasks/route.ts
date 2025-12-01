@@ -102,6 +102,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const body = await request.json()
+    const { title, organizationId } = body
+
     // Get organization ID for the task
     let finalOrganizationId: string | null = null
 
@@ -148,9 +151,6 @@ export async function POST(request: NextRequest) {
       finalOrganizationId = organization?.id || null
     }
     // Master admin can create tasks without organization (for testing/admin purposes)
-
-    const body = await request.json()
-    const { title, organizationId } = body
 
     const task = await prisma.task.create({
       data: {
