@@ -324,6 +324,30 @@ export default function Dashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Statistics Cards */}
+        {!loadingStats && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+              <div className="flex items-center justify-between mb-4">
+                <FileText className="w-8 h-8 text-[#007AFF]" />
+              </div>
+              <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                {stats?.totalTasks || 0}
+              </div>
+              <div className="text-[15px] text-[#8E8E93]">Total Tasks</div>
+            </div>
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+              <div className="flex items-center justify-between mb-4">
+                <DollarSign className="w-8 h-8 text-[#30D158]" />
+              </div>
+              <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
+                {formatPrice(stats?.totalSpending || 0)}
+              </div>
+              <div className="text-[15px] text-[#8E8E93]">Total Spending</div>
+            </div>
+          </div>
+        )}
+
         {/* Provider Tabs */}
         {providers.length > 0 && (
           <div className="mb-6">

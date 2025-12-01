@@ -172,13 +172,33 @@ export default function AdminDashboard() {
       {/* Header */}
       <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF]">Service Provider Dashboard</h1>
               {organization && (
                 <p className="text-[13px] text-[#8E8E93] mt-1">{organization.name}</p>
               )}
             </div>
+            {organization && (
+              <div className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-xl px-4 py-2 border border-[#007AFF]/20">
+                <Users className="w-4 h-4 text-[#007AFF]" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  <span className="text-[11px] text-[#8E8E93] uppercase tracking-wide">Invite Code:</span>
+                  <span className="text-[16px] font-bold text-[#007AFF] font-mono">{organization.inviteCode}</span>
+                  <button
+                    onClick={() => handleCopyInvite(organization.inviteCode, 'code')}
+                    className="p-1.5 hover:bg-[#007AFF]/20 rounded-lg transition-colors"
+                    title="Copy invite code"
+                  >
+                    {copiedInvite === `code-${organization.inviteCode}` ? (
+                      <CheckCircle className="w-4 h-4 text-[#30D158]" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-[#007AFF]" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3 sm:gap-5">
               <PortalSelector />
               <button
