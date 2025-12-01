@@ -364,6 +364,7 @@ export default function TaskTable() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Task Detail Modal */}
