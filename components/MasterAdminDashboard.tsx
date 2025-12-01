@@ -169,7 +169,7 @@ export default function MasterAdminDashboard() {
           <div className="text-[32px] font-bold text-[#FFFFFF] mb-1">
             {stats?.totalOrganizations || 0}
           </div>
-          <div className="text-[15px] text-[#8E8E93]">Organizations</div>
+          <div className="text-[15px] text-[#8E8E93]">Service Providers</div>
         </div>
 
         <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
@@ -237,7 +237,8 @@ export default function MasterAdminDashboard() {
         {activeTab === 'organizations' && (
           <div>
             <div className="p-6 border-b border-[#38383A]/30">
-              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Organizations</h2>
+              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Service Providers</h2>
+              <p className="text-[14px] text-[#8E8E93] mt-2">Platform-wide overview of all service providers using Task Chat</p>
             </div>
 
         <div className="overflow-x-auto">

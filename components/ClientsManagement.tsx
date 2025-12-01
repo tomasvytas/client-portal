@@ -118,7 +118,8 @@ export default function ClientsManagement() {
       {/* Organization Info & Invite Section */}
       {organization ? (
         <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
-          <h2 className="text-[20px] font-semibold text-[#FFFFFF] mb-6">Organization & Invite</h2>
+          <h2 className="text-[20px] font-semibold text-[#FFFFFF] mb-2">Your Organization</h2>
+          <p className="text-[14px] text-[#8E8E93] mb-6">Manage your organization and invite clients</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -226,7 +227,10 @@ export default function ClientsManagement() {
       <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
         <div className="p-6 border-b border-[#38383A]/30">
           <div className="flex justify-between items-center">
-            <h2 className="text-[20px] font-semibold text-[#FFFFFF]">Clients</h2>
+            <div>
+              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">Your Clients</h2>
+              <p className="text-[14px] text-[#8E8E93] mt-1">Clients linked to your organization</p>
+            </div>
             <div className="text-[15px] text-[#8E8E93]">
               {clients.length} client{clients.length !== 1 ? 's' : ''}
             </div>

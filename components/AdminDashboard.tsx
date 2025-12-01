@@ -162,7 +162,12 @@ export default function AdminDashboard() {
       <nav className="bg-[#1C1C1E] border-b border-[#38383A]/50 backdrop-blur-xl bg-opacity-80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF]">Admin Panel</h1>
+            <div>
+              <h1 className="text-[18px] sm:text-[20px] font-semibold text-[#FFFFFF]">Service Provider Dashboard</h1>
+              {organization && (
+                <p className="text-[13px] text-[#8E8E93] mt-1">{organization.name}</p>
+              )}
+            </div>
             <div className="flex items-center gap-3 sm:gap-5">
               <button
                 onClick={() => router.push('/')}
