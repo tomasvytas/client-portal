@@ -102,6 +102,15 @@ export default function ClientsManagement() {
 
       if (res.ok) {
         fetchData() // Refresh
+        // Remove from expanded state if it was expanded
+        if (expandedClient === clientId) {
+          setExpandedClient(null)
+          setClientDetails(prev => {
+            const newDetails = { ...prev }
+            delete newDetails[clientId]
+            return newDetails
+          })
+        }
       } else {
         const error = await res.json()
         alert(error.error || 'Failed to remove client')
@@ -111,6 +120,40 @@ export default function ClientsManagement() {
       alert('Failed to remove client')
     } finally {
       setDeleting(null)
+    }
+  }
+
+  const handleToggleClientDetails = async (clientId: string) => {
+    if (expandedClient === clientId) {
+      setExpandedClient(null)
+      return
+    }
+
+    setExpandedClient(clientId)
+    setLoadingDetails(clientId)
+
+    // If we already have the details, don't fetch again
+    if (clientDetails[clientId]) {
+      setLoadingDetails(null)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/admin/clients/${clientId}/details`)
+      if (res.ok) {
+        const data = await res.json()
+        setClientDetails(prev => ({
+          ...prev,
+          [clientId]: data.client,
+        }))
+      } else {
+        const error = await res.json()
+        console.error('Error fetching client details:', error)
+      }
+    } catch (error) {
+      console.error('Error fetching client details:', error)
+    } finally {
+      setLoadingDetails(null)
     }
   }
 
