@@ -277,7 +277,15 @@ export default function AdminDashboard() {
         {activeTab === 'clients' && <ClientsManagement />}
         {activeTab === 'pricing' && <PricingManagement />}
         {activeTab === 'services' && <ServicesManagement />}
-        {activeTab === 'master' && isMasterAdmin && <MasterAdminDashboard />}
+        {activeTab === 'master' && isMasterAdmin ? (
+          <MasterAdminDashboard />
+        ) : activeTab === 'master' ? (
+          <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30 text-center">
+            <Shield className="w-12 h-12 text-[#8E8E93] mx-auto mb-4" />
+            <h2 className="text-[20px] font-semibold text-[#FFFFFF] mb-2">Access Denied</h2>
+            <p className="text-[15px] text-[#8E8E93]">You don't have permission to access the Admin Portal.</p>
+          </div>
+        ) : null}
         
         {activeTab === 'settings' && (
           <div className="space-y-6">
