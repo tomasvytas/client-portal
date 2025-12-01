@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, DollarSign, User, FileText, Edit2, CheckCircle, Archive, Play, X, ExternalLink, Trash2, MoreVertical, Loader2 } from 'lucide-react'
+import { Calendar, DollarSign, User, FileText, Edit2, CheckCircle, Archive, Play, X, ExternalLink, Trash2, MoreVertical, Loader2, Copy, Users } from 'lucide-react'
 
 interface Task {
   id: string
@@ -73,10 +73,37 @@ export default function TaskTable() {
   const [selectedTask, setSelectedTask] = useState<TaskDetail | null>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
+  const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTasks()
+    fetchOrganization()
   }, [])
+
+  const fetchOrganization = async () => {
+    try {
+      const res = await fetch('/api/admin/organization')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.organization) {
+          setOrganization({
+            inviteCode: data.organization.inviteCode,
+            inviteLink: data.organization.inviteLink,
+            name: data.organization.name,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching organization:', error)
+    }
+  }
+
+  const handleCopyInvite = (text: string, type: 'code' | 'link') => {
+    navigator.clipboard.writeText(text)
+    setCopiedInvite(`${type}-${text}`)
+    setTimeout(() => setCopiedInvite(null), 2000)
+  }
 
   const fetchTasks = async () => {
     try {
@@ -206,6 +233,84 @@ export default function TaskTable() {
 
   return (
     <div className="space-y-6">
+      {/* Invite Code Badge */}
+      {organization && (
+        <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-5 h-5 text-[#007AFF]" />
+                <h3 className="text-[18px] font-semibold text-[#FFFFFF]">Invite Clients</h3>
+              </div>
+              <p className="text-[14px] text-[#8E8E93] mb-3">
+                Share your invite code or link with clients to join your organization
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl flex-1">
+                      <div className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">Invite Code</div>
+                      <div className="text-[20px] font-bold text-[#007AFF] font-mono">{organization.inviteCode}</div>
+                    </div>
+                    <button
+                      onClick={() => handleCopyInvite(organization.inviteCode, 'code')}
+                      className="px-4 py-3 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                    >
+                      {copiedInvite === `code-${organization.inviteCode}` ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={organization.inviteLink}
+                      className="flex-1 px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[13px] font-mono truncate"
+                    />
+                    <button
+                      onClick={() => handleCopyInvite(organization.inviteLink, 'link')}
+                      className="px-4 py-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                    >
+                      {copiedInvite === `link-${organization.inviteLink}` ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy Link
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href={organization.inviteLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 bg-[#2C2C2E] text-[#007AFF] rounded-xl hover:bg-[#38383A] transition-colors"
+                      title="Open invite link"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
         <div className="p-6 border-b border-[#38383A]/30">
           <h2 className="text-[20px] font-semibold text-[#FFFFFF]">Your Clients' Tasks</h2>
