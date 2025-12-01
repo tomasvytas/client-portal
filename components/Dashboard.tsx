@@ -437,7 +437,28 @@ export default function Dashboard() {
                 if (data.isMasterAdmin) {
                   router.push('/admin?tab=master')
                 } else {
-                  alert('Enable admin access first in Settings')
+                  // Auto-enable admin access for testing account
+                  try {
+                    const sessionRes = await fetch('/api/auth/session').then(r => r.json())
+                    const email = sessionRes?.user?.email
+                    
+                    if (email) {
+                      const enableRes = await fetch('/api/admin/set-master-admin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email }),
+                      })
+                      
+                      if (enableRes.ok) {
+                        router.push('/admin?tab=master')
+                        setTimeout(() => window.location.reload(), 500)
+                      } else {
+                        alert('Failed to enable admin access')
+                      }
+                    }
+                  } catch (error) {
+                    alert('Failed to enable admin access')
+                  }
                 }
               }}
               className="px-3 py-2 bg-[#FF9500] text-[#FFFFFF] rounded-lg text-[12px] font-semibold hover:bg-[#E6850E]"
