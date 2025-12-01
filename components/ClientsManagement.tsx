@@ -112,7 +112,7 @@ export default function ClientsManagement() {
   return (
     <div className="space-y-6">
       {/* Organization Info & Invite Section */}
-      {organization && (
+      {organization ? (
         <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
           <h2 className="text-[20px] font-semibold text-[#FFFFFF] mb-6">Organization & Invite</h2>
           

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign } from 'lucide-react'
+import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
+import { useRouter } from 'next/navigation'
 
 interface Stats {
   totalOrganizations: number
@@ -33,6 +34,7 @@ interface Organization {
 }
 
 export default function MasterAdminDashboard() {
+  const router = useRouter()
   const [stats, setStats] = useState<Stats | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
@@ -99,6 +101,21 @@ export default function MasterAdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header with back button */}
+      <div className="flex items-center gap-4 mb-4">
+        <button
+          onClick={() => {
+            // Use window.location to change tab via URL
+            window.location.href = '/admin?tab=board'
+          }}
+          className="p-2 hover:bg-[#2C2C2E] rounded-xl transition-colors text-[#8E8E93] hover:text-[#FFFFFF]"
+          title="Back to Task Board"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h2 className="text-[24px] font-bold text-[#FFFFFF]">Master Admin Dashboard</h2>
+      </div>
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">

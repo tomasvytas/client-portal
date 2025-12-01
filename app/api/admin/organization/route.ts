@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { requireAdmin } from '@/lib/admin'
+import { isServiceProvider } from '@/lib/admin'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin()
-
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Only service providers have organizations
+    if (!(await isServiceProvider())) {
+      return NextResponse.json({ organization: null })
     }
 
     // Get user's organization
