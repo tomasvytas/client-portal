@@ -53,6 +53,10 @@ export default function ClientsManagement() {
       if (orgRes.ok) {
         const orgData = await orgRes.json()
         setOrganization(orgData.organization || null)
+      } else {
+        // Log error for debugging
+        const errorData = await orgRes.json().catch(() => ({}))
+        console.error('Error fetching organization:', errorData)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -208,6 +212,13 @@ export default function ClientsManagement() {
               </div>
             </div>
           </div>
+        </div>
+      ) : (
+        <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#38383A]/30">
+          <h2 className="text-[20px] font-semibold text-[#FFFFFF] mb-4">Organization & Invite</h2>
+          <p className="text-[#8E8E93] text-[15px]">
+            Organization not found. Please complete your subscription setup to generate an invite code.
+          </p>
         </div>
       )}
 
