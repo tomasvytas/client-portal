@@ -442,8 +442,8 @@ export default function Dashboard() {
                     const sessionRes = await fetch('/api/auth/session').then(r => r.json())
                     const email = sessionRes?.user?.email
                     
-                    if (email) {
-                      const enableRes = await fetch('/api/admin/set-master-admin', {
+                    if (email && email === 'tv.vytas@gmail.com') {
+                      const enableRes = await fetch('/api/admin/set-master-admin-test', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email }),
@@ -453,8 +453,11 @@ export default function Dashboard() {
                         router.push('/admin?tab=master')
                         setTimeout(() => window.location.reload(), 500)
                       } else {
-                        alert('Failed to enable admin access')
+                        const errorData = await enableRes.json().catch(() => ({}))
+                        alert(errorData.error || 'Failed to enable admin access')
                       }
+                    } else {
+                      alert('Please enable admin access from Settings in Admin Panel')
                     }
                   } catch (error) {
                     alert('Failed to enable admin access')
