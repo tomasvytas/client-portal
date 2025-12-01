@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2, LogOut } from 'lucide-react'
+import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2, LayoutGrid } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
 
 interface Stats {
   totalOrganizations: number
@@ -155,7 +154,7 @@ export default function MasterAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button and logout */}
+      {/* Header with back button and switch to admin */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           <button
@@ -171,12 +170,15 @@ export default function MasterAdminDashboard() {
           <h2 className="text-[24px] font-bold text-[#FFFFFF]">Master Admin Dashboard</h2>
         </div>
         <button
-          onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-          className="flex items-center gap-2 px-4 py-2 bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 text-[#FF3B30] rounded-xl transition-colors text-[15px] font-semibold"
-          title="Logout"
+          onClick={() => {
+            // Switch to admin view (Task Board tab)
+            window.location.href = '/admin?tab=board'
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-[#007AFF]/10 hover:bg-[#007AFF]/20 text-[#007AFF] rounded-xl transition-colors text-[15px] font-semibold"
+          title="Go to Admin Dashboard"
         >
-          <LogOut className="w-4 h-4" />
-          Logout
+          <LayoutGrid className="w-4 h-4" />
+          Admin View
         </button>
       </div>
 
