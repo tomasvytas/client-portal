@@ -13,14 +13,27 @@ export async function POST(request: NextRequest) {
     // Verify user is master admin
     await requireMasterAdmin()
 
-    // Remove master admin status (but keep their role if they're a service provider)
+    // Check if user owns an organization (is a service provider)
+    const organization = await prisma.organization.findUnique({
+      where: { ownerId: session.user.id },
+      select: { id: true },
+    })
+
+    // If they own an organization, they're a service provider - keep that role
+    // Otherwise, check their current role and preserve it if it's service_provider or admin
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     })
 
-    // If they're a service provider, keep that role, otherwise set to client
-    const newRole = user?.role === 'service_provider' ? 'service_provider' : 'client'
+    // Determine new role: if they have an organization, they're a service provider
+    // Otherwise, if their role is service_provider or admin, keep it, else set to client
+    let newRole = 'client'
+    if (organization) {
+      newRole = 'service_provider'
+    } else if (user?.role === 'service_provider' || user?.role === 'admin') {
+      newRole = user.role
+    }
 
     await prisma.user.update({
       where: { id: session.user.id },
