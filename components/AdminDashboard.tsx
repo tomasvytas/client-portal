@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users, Shield } from 'lucide-react'
+import { Settings, LayoutGrid, DollarSign, CheckCircle, AlertCircle, Copy, Briefcase, Users, Shield, ExternalLink } from 'lucide-react'
 import PricingManagement from './PricingManagement'
 import TaskTable from './TaskTable'
 import ServicesManagement from './ServicesManagement'
@@ -23,8 +23,10 @@ export default function AdminDashboard() {
   const [migrating, setMigrating] = useState(false)
   const [migrationResult, setMigrationResult] = useState<{ success: boolean; message: string } | null>(null)
   const [isMasterAdmin, setIsMasterAdmin] = useState(false)
+  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
+  const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
 
-  // Check if user is master admin
+  // Check if user is master admin and fetch organization
   useEffect(() => {
     fetch('/api/admin/check')
       .then(res => res.json())
@@ -32,7 +34,23 @@ export default function AdminDashboard() {
         setIsMasterAdmin(data.isMasterAdmin || false)
       })
       .catch(() => setIsMasterAdmin(false))
-  }, [])
+
+    // Fetch organization info for invite code
+    if (!isMasterAdmin) {
+      fetch('/api/admin/organization')
+        .then(res => res.json())
+        .then(data => {
+          if (data.organization) {
+            setOrganization({
+              inviteCode: data.organization.inviteCode,
+              inviteLink: data.organization.inviteLink,
+              name: data.organization.name,
+            })
+          }
+        })
+        .catch(() => {})
+    }
+  }, [isMasterAdmin])
 
   // Check for auth callback results
   useEffect(() => {
@@ -73,6 +91,12 @@ export default function AdminDashboard() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
+  }
+
+  const handleCopyInvite = (text: string, type: 'code' | 'link') => {
+    navigator.clipboard.writeText(text)
+    setCopiedInvite(`${type}-${text}`)
+    setTimeout(() => setCopiedInvite(null), 2000)
   }
 
   const handleRunMigration = async () => {
@@ -224,8 +248,11 @@ export default function AdminDashboard() {
           <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/30">
             <h2 className="text-[20px] font-semibold mb-6 text-[#FFFFFF]">Settings</h2>
             
+            {/* Invite Code Section */}
+            <InviteCodeSection />
+            
             {/* Google Drive OAuth Setup */}
-            <div className="mb-8">
+            <div className="mb-8 mt-8">
               <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Google Drive Integration</h3>
               
               {driveAuthError && (
