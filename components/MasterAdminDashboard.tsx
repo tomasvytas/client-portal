@@ -156,7 +156,8 @@ export default function MasterAdminDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div className="mb-4">
-        <h2 className="text-[24px] font-bold text-[#FFFFFF]">Admin Dashboard</h2>
+        <h2 className="text-[24px] font-bold text-[#FFFFFF]">Platform Admin Dashboard</h2>
+        <p className="text-[15px] text-[#8E8E93] mt-2">Overview of all service providers using Task Chat</p>
       </div>
 
       {/* Stats Overview */}

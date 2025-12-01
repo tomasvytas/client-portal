@@ -205,12 +205,17 @@ export default function TaskTable() {
   }
 
   return (
-    <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
-      <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <table className="w-full min-w-[800px]">
-          <thead className="bg-[#2C2C2E]">
-            <tr>
-              <th className="px-4 sm:px-6 py-4 text-left text-[15px] font-semibold text-[#FFFFFF]">Task</th>
+    <div className="space-y-6">
+      <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
+        <div className="p-6 border-b border-[#38383A]/30">
+          <h2 className="text-[20px] font-semibold text-[#FFFFFF]">Your Clients' Tasks</h2>
+          <p className="text-[14px] text-[#8E8E93] mt-2">Manage tasks from your clients</p>
+        </div>
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <table className="w-full min-w-[800px]">
+            <thead className="bg-[#2C2C2E]">
+              <tr>
+                <th className="px-4 sm:px-6 py-4 text-left text-[15px] font-semibold text-[#FFFFFF]">Task</th>
               <th className="px-4 sm:px-6 py-4 text-left text-[15px] font-semibold text-[#FFFFFF] hidden md:table-cell">Client</th>
               <th className="px-4 sm:px-6 py-4 text-left text-[15px] font-semibold text-[#FFFFFF]">Deadline</th>
               <th className="px-4 sm:px-6 py-4 text-left text-[15px] font-semibold text-[#FFFFFF]">Price</th>
