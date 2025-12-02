@@ -178,11 +178,12 @@ export async function POST(request: NextRequest) {
       // Create organization
       let organization
       try {
+        // Always try to create with serviceId first (column should exist after migration)
         organization = await prisma.organization.create({
           data: {
             name: organizationName,
             slug: finalSlug,
-            serviceId: serviceIdColumnExists ? finalServiceId : undefined,
+            serviceId: finalServiceId,
             ownerId: user.id,
             inviteCode,
             inviteLink,
