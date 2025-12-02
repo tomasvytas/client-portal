@@ -135,26 +135,38 @@ export async function POST(request: NextRequest) {
         finalSlug = `${slug}-${Date.now()}`
       }
 
-      // Ensure serviceId is unique (if column exists)
-      let finalServiceId = serviceId
-      let serviceIdColumnExists = true
+      // Check if serviceId column exists in database
+      let serviceIdColumnExists = false
       try {
+        await prisma.$queryRaw`SELECT "serviceId" FROM "Organization" LIMIT 1`
+        serviceIdColumnExists = true
+      } catch (error: any) {
+        // Column doesn't exist
+        console.log('[Signup] serviceId column does not exist in database')
+        serviceIdColumnExists = false
+      }
+
+      // Ensure serviceId is unique (only if column exists)
+      let finalServiceId = serviceId
+      if (serviceIdColumnExists) {
         let attempts = 0
         while (attempts < 10) {
-          const existing = await prisma.organization.findUnique({
-            where: { serviceId: finalServiceId },
-          })
-          if (!existing) break
-          finalServiceId = generateServiceId()
-          attempts++
-        }
-      } catch (error: any) {
-        // If serviceId column doesn't exist, skip uniqueness check
-        if (error?.code === 'P2022' || error?.message?.includes('serviceId')) {
-          console.log('[Signup] serviceId column does not exist, skipping uniqueness check')
-          serviceIdColumnExists = false
-        } else {
-          throw error
+          try {
+            const existing = await prisma.organization.findUnique({
+              where: { serviceId: finalServiceId },
+            })
+            if (!existing) break
+            finalServiceId = generateServiceId()
+            attempts++
+          } catch (error: any) {
+            // If query fails, skip uniqueness check
+            if (error?.code === 'P2022' || error?.message?.includes('serviceId')) {
+              console.log('[Signup] Cannot check serviceId uniqueness, skipping')
+              serviceIdColumnExists = false
+              break
+            }
+            throw error
+          }
         }
       }
 
