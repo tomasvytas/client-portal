@@ -75,6 +75,8 @@ export default function TaskTable() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
+  const [loadingOrganization, setLoadingOrganization] = useState(true)
+  const [organizationError, setOrganizationError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTasks()
@@ -82,20 +84,28 @@ export default function TaskTable() {
   }, [])
 
   const fetchOrganization = async () => {
+    setLoadingOrganization(true)
+    setOrganizationError(null)
     try {
       const res = await fetch('/api/admin/organization')
-      if (res.ok) {
-        const data = await res.json()
-        if (data.organization) {
-          setOrganization({
-            inviteCode: data.organization.inviteCode,
-            inviteLink: data.organization.inviteLink,
-            name: data.organization.name,
-          })
-        }
+      const data = await res.json()
+      
+      if (res.ok && data.organization) {
+        setOrganization({
+          inviteCode: data.organization.inviteCode,
+          inviteLink: data.organization.inviteLink,
+          name: data.organization.name,
+        })
+      } else if (res.status === 401) {
+        setOrganizationError('Unauthorized - Please check your permissions')
+      } else if (!data.organization) {
+        setOrganizationError('No organization found. Please ensure you have completed your subscription setup.')
       }
     } catch (error) {
       console.error('Error fetching organization:', error)
+      setOrganizationError('Failed to load organization information')
+    } finally {
+      setLoadingOrganization(false)
     }
   }
 
@@ -244,7 +254,16 @@ export default function TaskTable() {
               <p className="text-[14px] text-[#8E8E93] mb-3">
                 Share your invite code or link with clients to join your organization
               </p>
-              {organization ? (
+              {loadingOrganization ? (
+                <div className="text-[14px] text-[#8E8E93] flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading invite information...
+                </div>
+              ) : organizationError ? (
+                <div className="text-[14px] text-[#FF3B30] bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-xl p-4">
+                  {organizationError}
+                </div>
+              ) : organization ? (
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -307,7 +326,7 @@ export default function TaskTable() {
                   </div>
                 </div>
               ) : (
-                <div className="text-[14px] text-[#8E8E93]">Loading invite information...</div>
+                <div className="text-[14px] text-[#8E8E93]">No organization found. Please contact support.</div>
               )}
             </div>
           </div>

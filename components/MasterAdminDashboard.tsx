@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2, LayoutGrid } from 'lucide-react'
+import { Building2, Users, CreditCard, FileText, TrendingUp, Calendar, DollarSign, ArrowLeft, Trash2, Loader2, LayoutGrid, Search, Download, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 
@@ -59,6 +59,8 @@ export default function MasterAdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'organizations' | 'users'>('organizations')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
 
   useEffect(() => {
     fetchData()
@@ -144,6 +146,67 @@ export default function MasterAdminDashboard() {
     return basePrice + (clientCount * clientFee)
   }
 
+  // Filter organizations
+  const filteredOrganizations = organizations.filter((org) => {
+    const matchesSearch = !searchQuery || 
+      org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.owner.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.owner.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesStatus = filterStatus === 'all' ||
+      (filterStatus === 'active' && org.subscription?.status === 'active') ||
+      (filterStatus === 'inactive' && (!org.subscription || org.subscription.status !== 'active'))
+    
+    return matchesSearch && matchesStatus
+  })
+
+  // Filter users
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = !searchQuery ||
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.organization?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesRole = filterStatus === 'all' ||
+      user.role === filterStatus ||
+      (filterStatus === 'master_admin' && user.isMasterAdmin)
+    
+    return matchesSearch && matchesRole
+  })
+
+  // Export to CSV
+  const exportToCSV = (type: 'organizations' | 'users') => {
+    let csv = ''
+    let filename = ''
+    
+    if (type === 'organizations') {
+      filename = `organizations_${format(new Date(), 'yyyy-MM-dd')}.csv`
+      csv = 'Organization,Owner Name,Owner Email,Plan,Status,Clients,Tasks,Monthly Revenue,Created\n'
+      filteredOrganizations.forEach((org) => {
+        const revenue = org.subscription 
+          ? calculateRevenue(org.subscription.plan, org.subscription.clientCount)
+          : 0
+        csv += `"${org.name}","${org.owner.name || ''}","${org.owner.email || ''}","${formatPlan(org.subscription?.plan || '')}","${org.subscription?.status || 'none'}","${org._count.clientProviders}","${org._count.tasks}","€${revenue}","${format(new Date(org.createdAt), 'MMM d, yyyy')}"\n`
+      })
+    } else {
+      filename = `users_${format(new Date(), 'yyyy-MM-dd')}.csv`
+      csv = 'Name,Email,Role,Organization,Tasks,Products,Created\n'
+      filteredUsers.forEach((user) => {
+        csv += `"${user.name || ''}","${user.email || ''}","${user.role}","${user.organization?.name || ''}","${user._count.tasks}","${user._count.products}","${format(new Date(user.createdAt), 'MMM d, yyyy')}"\n`
+      })
+    }
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -207,6 +270,22 @@ export default function MasterAdminDashboard() {
         </div>
       </div>
 
+      {/* Total Revenue Card */}
+      {stats && (
+        <div className="bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 rounded-2xl p-6 border border-[#30D158]/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">Total Monthly Revenue</div>
+              <div className="text-[36px] font-bold text-[#30D158] mb-1">
+                €{stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-[14px] text-[#8E8E93]">From all active subscriptions</div>
+            </div>
+            <DollarSign className="w-12 h-12 text-[#30D158] opacity-50" />
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="bg-[#1C1C1E] rounded-2xl border border-[#38383A]/30 overflow-hidden">
         <div className="border-b border-[#38383A]/30">
@@ -238,8 +317,48 @@ export default function MasterAdminDashboard() {
         {activeTab === 'organizations' && (
           <div>
             <div className="p-6 border-b border-[#38383A]/30">
-              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Service Providers</h2>
-              <p className="text-[14px] text-[#8E8E93] mt-2">Platform-wide overview of all service providers using Task Chat</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Service Providers</h2>
+                  <p className="text-[14px] text-[#8E8E93] mt-2">Platform-wide overview of all service providers using Task Chat</p>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+                    <input
+                      type="text"
+                      placeholder="Search organizations..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full sm:w-64 pl-10 pr-4 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93] hover:text-[#FFFFFF]"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="px-4 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <button
+                    onClick={() => exportToCSV('organizations')}
+                    className="px-4 py-2 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
         <div className="overflow-x-auto">
@@ -256,14 +375,14 @@ export default function MasterAdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#38383A]/30">
-              {organizations.length === 0 ? (
+              {filteredOrganizations.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-[#8E8E93] text-[15px]">
-                    No organizations yet
+                    {organizations.length === 0 ? 'No organizations yet' : 'No organizations match your search'}
                   </td>
                 </tr>
               ) : (
-                organizations.map((org) => (
+                filteredOrganizations.map((org) => (
                   <tr key={org.id} className="hover:bg-[#2C2C2E]/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="text-[15px] font-semibold text-[#FFFFFF]">{org.name}</div>
@@ -329,7 +448,49 @@ export default function MasterAdminDashboard() {
         {activeTab === 'users' && (
           <div>
             <div className="p-6 border-b border-[#38383A]/30">
-              <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Users</h2>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-[20px] font-semibold text-[#FFFFFF]">All Users</h2>
+                  <p className="text-[14px] text-[#8E8E93] mt-2">Manage all users across the platform</p>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full sm:w-64 pl-10 pr-4 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#8E8E93] hover:text-[#FFFFFF]"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="px-4 py-2 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="client">Clients</option>
+                    <option value="service_provider">Service Providers</option>
+                    <option value="master_admin">Admins</option>
+                  </select>
+                  <button
+                    onClick={() => exportToCSV('users')}
+                    className="px-4 py-2 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors flex items-center gap-2 text-[14px] font-semibold"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -347,14 +508,14 @@ export default function MasterAdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#38383A]/30">
-                  {users.length === 0 ? (
+                  {filteredUsers.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-6 py-12 text-center text-[#8E8E93] text-[15px]">
-                        No users found
+                        {users.length === 0 ? 'No users found' : 'No users match your search'}
                       </td>
                     </tr>
                   ) : (
-                    users.map((user) => (
+                    filteredUsers.map((user) => (
                       <tr key={user.id} className="hover:bg-[#2C2C2E]/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="text-[15px] font-semibold text-[#FFFFFF]">
