@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { analyzeProduct } from '../products/analyze/route'
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,22 +91,29 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Update status to analyzing
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { status: 'analyzing' },
+    })
+
     // Trigger analysis in background (don't wait for it)
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    fetch(`${baseUrl}/api/products/analyze`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productId: product.id, // Pass the created product ID
-      }),
-    }).catch(err => {
-      console.error('Error triggering product analysis:', err)
-      // Update product status to failed if analysis trigger fails
-      prisma.product.update({
+    // Call analyzeProduct directly instead of making HTTP request to avoid auth issues
+    if (product.websiteUrl) {
+      analyzeProduct(product.id, product.websiteUrl, product.name || 'Unknown Product').catch((error) => {
+        console.error('Error analyzing product:', error)
+        prisma.product.update({
+          where: { id: product.id },
+          data: { status: 'failed' },
+        }).catch(console.error)
+      })
+    } else {
+      // If no website URL, mark as failed
+      await prisma.product.update({
         where: { id: product.id },
         data: { status: 'failed' },
-      }).catch(console.error)
-    })
+      })
+    }
 
     return NextResponse.json({
       product,

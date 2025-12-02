@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
 /**
  * Analyze product website and generate brand guidelines
  */
-async function analyzeProduct(
+export async function analyzeProduct(
   productId: string,
   websiteUrl: string,
   productName?: string
