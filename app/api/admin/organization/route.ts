@@ -19,6 +19,13 @@ function generateServiceId(): string {
   return serviceId
 }
 
+// Generate CUID-like ID (simple version)
+function generateCuid(): string {
+  const timestamp = Date.now().toString(36)
+  const random = Math.random().toString(36).substring(2, 10)
+  return `c${timestamp}${random}`
+}
+
 // Generate URL-friendly slug from name
 function generateSlug(name: string): string {
   return name
@@ -130,7 +137,7 @@ export async function GET(request: NextRequest) {
             console.log('[Organization API] serviceId column may not exist, using raw SQL')
             
             // Create organization using raw SQL (without serviceId)
-            const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+            const orgId = generateCuid()
             await prisma.$executeRaw`
               INSERT INTO "Organization" (id, name, slug, "ownerId", "inviteCode", "inviteLink", "createdAt", "updatedAt")
               VALUES (${orgId}, ${organizationName}, ${finalSlug}, ${session.user.id}, ${inviteCode}, ${inviteLink}, NOW(), NOW())
