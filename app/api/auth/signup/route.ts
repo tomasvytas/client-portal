@@ -207,33 +207,32 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (createError: any) {
-        // If serviceId is required but column doesn't exist, create without it
+        // If serviceId column doesn't exist, create using raw SQL
         if (createError?.code === 'P2022' || createError?.message?.includes('serviceId')) {
-          console.log('[Signup] Creating organization without serviceId column')
-          organization = await prisma.organization.create({
-            data: {
-              name: organizationName,
-              slug: finalSlug,
-              ownerId: user.id,
-              inviteCode,
-              inviteLink,
-            },
-          })
+          console.log('[Signup] Creating organization using raw SQL (serviceId column missing)')
+          const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
           
-          // Try to add serviceId via raw SQL
+          // Create organization using raw SQL
+          await prisma.$executeRaw`
+            INSERT INTO "Organization" (id, name, slug, "ownerId", "inviteCode", "inviteLink", "createdAt", "updatedAt")
+            VALUES (${orgId}, ${organizationName}, ${finalSlug}, ${user.id}, ${inviteCode}, ${inviteLink}, NOW(), NOW())
+          `
+          
+          // Try to add serviceId via raw SQL if column exists
           try {
             await prisma.$executeRaw`
               UPDATE "Organization" 
               SET "serviceId" = ${finalServiceId} 
-              WHERE id = ${organization.id}
+              WHERE id = ${orgId}
             `
-            // Re-fetch to get serviceId
-            organization = await prisma.organization.findUnique({
-              where: { id: organization.id },
-            })
           } catch (updateError) {
-            console.warn('[Signup] Could not update serviceId:', updateError)
+            console.warn('[Signup] Could not update serviceId (column may not exist):', updateError)
           }
+          
+          // Re-fetch the organization
+          organization = await prisma.organization.findUnique({
+            where: { id: orgId },
+          })
         } else {
           throw createError
         }
