@@ -145,9 +145,9 @@ function SignInForm() {
 
   return (
     <div className="min-h-screen bg-[#000000] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl">
         {/* Logo */}
-        <div className="flex justify-center mb-12">
+        <div className="flex justify-center mb-8 md:mb-12">
           <Image
             src="/Logo.svg"
             alt="Task Chat Logo"
@@ -159,7 +159,7 @@ function SignInForm() {
         </div>
 
         {/* Sign In Card */}
-        <div className="bg-[#1C1C1E] rounded-2xl p-8 border border-[#38383A]/50 shadow-2xl">
+        <div className="bg-[#1C1C1E] rounded-2xl p-6 md:p-8 lg:p-10 border border-[#38383A]/50 shadow-2xl">
           <div className="text-center mb-8">
             <h1 className="text-[32px] font-bold text-[#FFFFFF] mb-3">
               {isSignUp ? 'Create Account' : 'Welcome to Task Chat'}
@@ -170,30 +170,32 @@ function SignInForm() {
           </div>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleEmailAuth} className="mb-6 space-y-4">
+          <form onSubmit={handleEmailAuth} className="mb-6 space-y-4 md:space-y-5">
             {isSignUp && (
               <>
-                <div>
-                  <label htmlFor="name" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required={isSignUp}
-                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
-                    placeholder="John Doe"
-                  />
-                </div>
+                {/* Name and Role in two columns on desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                  <div>
+                    <label htmlFor="name" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required={isSignUp}
+                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                      placeholder="John Doe"
+                    />
+                  </div>
 
-                {/* Role Selection */}
-                <div>
-                  <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-3">
-                    I am a...
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Role Selection */}
+                  <div>
+                    <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-3">
+                      I am a...
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -227,6 +229,7 @@ function SignInForm() {
                       <div className="text-[15px] font-semibold">Client</div>
                       <div className="text-[13px] text-[#8E8E93] mt-1">I need services</div>
                     </button>
+                    </div>
                   </div>
                 </div>
 
@@ -253,7 +256,7 @@ function SignInForm() {
                       <label className="block text-[15px] font-semibold text-[#FFFFFF] mb-3">
                         Choose Subscription Plan
                       </label>
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <button
                           type="button"
                           onClick={() => setSubscriptionPlan('1_month')}
@@ -263,7 +266,7 @@ function SignInForm() {
                               : 'border-[#38383A] bg-[#2C2C2E] hover:border-[#38383A]/70'
                           }`}
                         >
-                          <div className="flex justify-between items-center">
+                          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
                             <div>
                               <div className="text-[15px] font-semibold text-[#FFFFFF]">1 Month</div>
                               <div className="text-[13px] text-[#8E8E93] mt-1">€50/month + €10 per client</div>
@@ -280,7 +283,7 @@ function SignInForm() {
                               : 'border-[#38383A] bg-[#2C2C2E] hover:border-[#38383A]/70'
                           }`}
                         >
-                          <div className="flex justify-between items-center">
+                          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
                             <div>
                               <div className="text-[15px] font-semibold text-[#FFFFFF]">3 Months</div>
                               <div className="text-[13px] text-[#8E8E93] mt-1">€35/month + €8 per client</div>
@@ -297,7 +300,7 @@ function SignInForm() {
                               : 'border-[#38383A] bg-[#2C2C2E] hover:border-[#38383A]/70'
                           }`}
                         >
-                          <div className="flex justify-between items-center">
+                          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
                             <div>
                               <div className="text-[15px] font-semibold text-[#FFFFFF]">6 Months</div>
                               <div className="text-[13px] text-[#8E8E93] mt-1">€25/month + €7 per client</div>
@@ -331,54 +334,57 @@ function SignInForm() {
                       </p>
                     </div>
 
-                    <div>
-                      <label htmlFor="companyName" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
-                        Company Name <span className="text-[#8E8E93] text-[13px] font-normal">(Optional)</span>
-                      </label>
-                      <input
-                        id="companyName"
-                        type="text"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
-                        placeholder="Your Company Name"
-                      />
-                      <p className="text-[13px] text-[#8E8E93] mt-2">
-                        Register your company name (can be added later)
-                      </p>
-                    </div>
+                    {/* Company Name and Product Analysis in two columns on desktop */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                      <div>
+                        <label htmlFor="companyName" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                          Company Name <span className="text-[#8E8E93] text-[13px] font-normal">(Optional)</span>
+                        </label>
+                        <input
+                          id="companyName"
+                          type="text"
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                          placeholder="Your Company Name"
+                        />
+                        <p className="text-[13px] text-[#8E8E93] mt-2">
+                          Register your company name (can be added later)
+                        </p>
+                      </div>
 
-                    <div className="bg-[#1C1C1E] rounded-xl p-4 border border-[#38383A]/30">
-                      <p className="text-[14px] font-semibold text-[#FFFFFF] mb-3">Product Analysis (Optional)</p>
-                      <p className="text-[13px] text-[#8E8E93] mb-4">
-                        Add your product website to start analysis immediately after registration
-                      </p>
-                      <div className="space-y-3">
-                        <div>
-                          <label htmlFor="productName" className="block text-[13px] font-semibold text-[#8E8E93] mb-1.5">
-                            Product Name
-                          </label>
-                          <input
-                            id="productName"
-                            type="text"
-                            value={productName}
-                            onChange={(e) => setProductName(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-[#2C2C2E] border border-[#38383A] rounded-lg text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
-                            placeholder="My Product"
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="productWebsite" className="block text-[13px] font-semibold text-[#8E8E93] mb-1.5">
-                            Website URL
-                          </label>
-                          <input
-                            id="productWebsite"
-                            type="text"
-                            value={productWebsite}
-                            onChange={(e) => setProductWebsite(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-[#2C2C2E] border border-[#38383A] rounded-lg text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
-                            placeholder="https://www.example.com"
-                          />
+                      <div className="bg-[#1C1C1E] rounded-xl p-4 border border-[#38383A]/30">
+                        <p className="text-[14px] font-semibold text-[#FFFFFF] mb-3">Product Analysis (Optional)</p>
+                        <p className="text-[13px] text-[#8E8E93] mb-4">
+                          Add your product website to start analysis immediately after registration
+                        </p>
+                        <div className="space-y-3">
+                          <div>
+                            <label htmlFor="productName" className="block text-[13px] font-semibold text-[#8E8E93] mb-1.5">
+                              Product Name
+                            </label>
+                            <input
+                              id="productName"
+                              type="text"
+                              value={productName}
+                              onChange={(e) => setProductName(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-[#2C2C2E] border border-[#38383A] rounded-lg text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
+                              placeholder="My Product"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="productWebsite" className="block text-[13px] font-semibold text-[#8E8E93] mb-1.5">
+                              Website URL
+                            </label>
+                            <input
+                              id="productWebsite"
+                              type="text"
+                              value={productWebsite}
+                              onChange={(e) => setProductWebsite(e.target.value)}
+                              className="w-full px-4 py-2.5 bg-[#2C2C2E] border border-[#38383A] rounded-lg text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all text-[14px]"
+                              placeholder="https://www.example.com"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -387,35 +393,38 @@ function SignInForm() {
               </>
             )}
 
-            <div>
-              <label htmlFor="email" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
-                placeholder="you@example.com"
-              />
-            </div>
+            {/* Email and Password in two columns on desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+              <div>
+                <label htmlFor="email" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                  placeholder="you@example.com"
+                />
+              </div>
 
-            <div>
-              <label htmlFor="password" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
-                placeholder="••••••••"
-              />
+              <div>
+                <label htmlFor="password" className="block text-[15px] font-semibold text-[#FFFFFF] mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#38383A] rounded-xl text-[#FFFFFF] placeholder:text-[#8E8E93] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/50 focus:border-[#007AFF]/50 transition-all"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
             {error && (
