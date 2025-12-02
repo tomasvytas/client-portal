@@ -146,9 +146,11 @@ export async function GET(request: NextRequest) {
             })
             // Update with serviceId if possible (migration might be needed)
             try {
-              await prisma.$executeRawUnsafe(
-                `UPDATE "Organization" SET "serviceId" = '${finalServiceId.replace(/'/g, "''")}' WHERE id = '${organization.id.replace(/'/g, "''")}'`
-              )
+              await prisma.$executeRaw`
+                UPDATE "Organization" 
+                SET "serviceId" = ${finalServiceId} 
+                WHERE id = ${organization.id}
+              `
               // Re-fetch to get serviceId
               organization = await prisma.organization.findUnique({
                 where: { id: organization.id },
