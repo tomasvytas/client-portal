@@ -183,6 +183,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           name: productName.trim(),
           websiteUrl: productWebsite.startsWith('http') ? productWebsite : `https://${productWebsite}`,
+          organizationId: selectedProviderId || null, // Link product to selected provider
         }),
       })
 
