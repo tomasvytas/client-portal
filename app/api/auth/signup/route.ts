@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // For service providers, organization name and subscription plan are required
+    // For service providers, organization name is required (subscription plan optional for demo mode)
     if (role === 'service_provider') {
       if (!organizationName) {
         return NextResponse.json(
@@ -70,12 +70,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
-      if (!subscriptionPlan) {
-        return NextResponse.json(
-          { error: 'Subscription plan is required for service provider registration' },
-          { status: 400 }
-        )
-      }
+      // Subscription plan is optional - defaults to 6_month for demo mode
     }
 
     // Check if user already exists

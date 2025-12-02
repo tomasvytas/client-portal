@@ -33,6 +33,18 @@ export async function POST(request: NextRequest) {
           }
         },
       },
+      {
+        name: 'Add serviceId to Organization',
+        path: '20251201180000_add_service_id_to_organization',
+        check: async () => {
+          try {
+            await prisma.$queryRaw`SELECT "serviceId" FROM "Organization" LIMIT 1`
+            return true // Column exists
+          } catch {
+            return false // Column doesn't exist
+          }
+        },
+      },
     ]
 
     // Run each migration
