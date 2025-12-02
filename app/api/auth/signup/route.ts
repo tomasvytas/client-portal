@@ -135,16 +135,27 @@ export async function POST(request: NextRequest) {
         finalSlug = `${slug}-${Date.now()}`
       }
 
-      // Ensure serviceId is unique
+      // Ensure serviceId is unique (if column exists)
       let finalServiceId = serviceId
-      let attempts = 0
-      while (attempts < 10) {
-        const existing = await prisma.organization.findUnique({
-          where: { serviceId: finalServiceId },
-        })
-        if (!existing) break
-        finalServiceId = generateServiceId()
-        attempts++
+      let serviceIdColumnExists = true
+      try {
+        let attempts = 0
+        while (attempts < 10) {
+          const existing = await prisma.organization.findUnique({
+            where: { serviceId: finalServiceId },
+          })
+          if (!existing) break
+          finalServiceId = generateServiceId()
+          attempts++
+        }
+      } catch (error: any) {
+        // If serviceId column doesn't exist, skip uniqueness check
+        if (error?.code === 'P2022' || error?.message?.includes('serviceId')) {
+          console.log('[Signup] serviceId column does not exist, skipping uniqueness check')
+          serviceIdColumnExists = false
+        } else {
+          throw error
+        }
       }
 
       // Calculate subscription dates (demo mode - default to 6 months)
@@ -153,16 +164,67 @@ export async function POST(request: NextRequest) {
       periodEnd.setMonth(periodEnd.getMonth() + 6) // Default 6 months for demo
 
       // Create organization
-      const organization = await prisma.organization.create({
-        data: {
-          name: organizationName,
-          slug: finalSlug,
-          serviceId: finalServiceId,
-          ownerId: user.id,
-          inviteCode,
-          inviteLink,
-        },
-      })
+      let organization
+      try {
+        organization = await prisma.organization.create({
+          data: {
+            name: organizationName,
+            slug: finalSlug,
+            serviceId: serviceIdColumnExists ? finalServiceId : undefined,
+            ownerId: user.id,
+            inviteCode,
+            inviteLink,
+          },
+        })
+
+        // If serviceId column doesn't exist, try to add it via raw SQL
+        if (!serviceIdColumnExists) {
+          try {
+            await prisma.$executeRaw`
+              UPDATE "Organization" 
+              SET "serviceId" = ${finalServiceId} 
+              WHERE id = ${organization.id}
+            `
+            // Re-fetch to get serviceId
+            organization = await prisma.organization.findUnique({
+              where: { id: organization.id },
+            })
+          } catch (updateError) {
+            console.warn('[Signup] Could not update serviceId (column may not exist):', updateError)
+          }
+        }
+      } catch (createError: any) {
+        // If serviceId is required but column doesn't exist, create without it
+        if (createError?.code === 'P2022' || createError?.message?.includes('serviceId')) {
+          console.log('[Signup] Creating organization without serviceId column')
+          organization = await prisma.organization.create({
+            data: {
+              name: organizationName,
+              slug: finalSlug,
+              ownerId: user.id,
+              inviteCode,
+              inviteLink,
+            },
+          })
+          
+          // Try to add serviceId via raw SQL
+          try {
+            await prisma.$executeRaw`
+              UPDATE "Organization" 
+              SET "serviceId" = ${finalServiceId} 
+              WHERE id = ${organization.id}
+            `
+            // Re-fetch to get serviceId
+            organization = await prisma.organization.findUnique({
+              where: { id: organization.id },
+            })
+          } catch (updateError) {
+            console.warn('[Signup] Could not update serviceId:', updateError)
+          }
+        } else {
+          throw createError
+        }
+      }
 
       // Create subscription (demo mode - always active)
       await prisma.subscription.create({
