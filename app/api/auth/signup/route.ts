@@ -277,13 +277,16 @@ export async function POST(request: NextRequest) {
 
     // If client, link to organization via invite code
     if (userRole === 'client' && inviteCode) {
+      // Trim and normalize invite code
+      const normalizedInviteCode = inviteCode.trim().toUpperCase()
+      
       const organization = await prisma.organization.findUnique({
-        where: { inviteCode },
+        where: { inviteCode: normalizedInviteCode },
       })
 
       if (!organization) {
         return NextResponse.json(
-          { error: 'Invalid invite code' },
+          { error: 'Invalid invite code. Please check the code and try again.' },
           { status: 400 }
         )
       }

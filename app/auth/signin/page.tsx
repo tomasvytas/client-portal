@@ -67,7 +67,7 @@ function SignInForm() {
             password, 
             name, 
             role,
-            inviteCode: role === 'client' ? inviteCode : undefined,
+            inviteCode: role === 'client' ? (inviteCode?.trim().toUpperCase() || undefined) : undefined,
             organizationName: role === 'service_provider' ? organizationName : undefined,
             subscriptionPlan: role === 'service_provider' ? subscriptionPlan : undefined,
             companyName: role === 'client' ? (companyName.trim() || undefined) : undefined,

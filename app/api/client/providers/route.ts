@@ -85,9 +85,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Trim and normalize invite code
+    const normalizedInviteCode = inviteCode.trim().toUpperCase()
+    
     // Find organization by invite code
     const organization = await prisma.organization.findUnique({
-      where: { inviteCode },
+      where: { inviteCode: normalizedInviteCode },
       include: {
         subscription: true,
       },
