@@ -222,10 +222,28 @@ Here is the scraped website content. Analyze it and generate the brand guideline
 ${websiteContent}`
 
     console.log('Starting Gemini analysis for product:', productId)
-    const result = await model.generateContent(prompt)
+    console.log('Website URL:', websiteUrl)
+    console.log('Content length:', websiteContent.length)
+    
+    // Add timeout for Gemini API call (60 seconds max)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Gemini API call timed out after 60 seconds')), 60000)
+    })
+    
+    const geminiPromise = model.generateContent(prompt)
+    const result = await Promise.race([geminiPromise, timeoutPromise]) as any
+    
+    if (!result || !result.response) {
+      throw new Error('Invalid response from Gemini API')
+    }
+    
     const response = result.response
     const brandGuidelines = response.text()
     console.log('Gemini analysis completed, length:', brandGuidelines.length)
+    
+    if (!brandGuidelines || brandGuidelines.length < 100) {
+      throw new Error('Gemini API returned insufficient content')
+    }
 
     // Extract product type from the analysis (try to infer from content)
     const productTypeMatch = brandGuidelines.match(/Product:\s*\[([^\]]+)\]/i)

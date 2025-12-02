@@ -199,8 +199,8 @@ export default function ProductAnalysis() {
     const createdAt = new Date(product.createdAt).getTime()
     const now = Date.now()
     const elapsed = now - createdAt
-    const estimatedTotal = 120000 // 2 minutes estimated
-    const progress = Math.min(95, Math.floor((elapsed / estimatedTotal) * 100))
+    const estimatedTotal = 180000 // 3 minutes estimated (increased for Gemini API)
+    const progress = Math.min(99, Math.floor((elapsed / estimatedTotal) * 100)) // Cap at 99% instead of 95%
 
     return progress
   }
