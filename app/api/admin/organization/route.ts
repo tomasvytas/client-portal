@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
         periodEnd.setMonth(periodEnd.getMonth() + 6) // Default 6 months for demo
 
         // Create organization
-        // Try with serviceId first, fallback without it if column doesn't exist
+        // Try with serviceId first, fallback to raw SQL if column doesn't exist
         try {
           organization = await prisma.organization.create({
             data: {
@@ -122,33 +122,34 @@ export async function GET(request: NextRequest) {
             },
           })
         } catch (serviceIdError: any) {
-          // If serviceId column doesn't exist, try without it
-          if (serviceIdError?.message?.includes('serviceId') || serviceIdError?.code === 'P2003') {
-            console.log('[Organization API] serviceId column may not exist, trying without it')
-            const createdOrg = await prisma.organization.create({
-              data: {
-                name: organizationName,
-                slug: finalSlug,
-                ownerId: session.user.id,
-                inviteCode,
-                inviteLink,
-              },
-            })
+          // If serviceId column doesn't exist, use raw SQL
+          if (serviceIdError?.message?.includes('serviceId') || 
+              serviceIdError?.message?.includes('column') ||
+              serviceIdError?.code === 'P2003' ||
+              serviceIdError?.code === 'P2011') {
+            console.log('[Organization API] serviceId column may not exist, using raw SQL')
             
-            // Update with serviceId if possible (migration might be needed)
+            // Create organization using raw SQL (without serviceId)
+            const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+            await prisma.$executeRaw`
+              INSERT INTO "Organization" (id, name, slug, "ownerId", "inviteCode", "inviteLink", "createdAt", "updatedAt")
+              VALUES (${orgId}, ${organizationName}, ${finalSlug}, ${session.user.id}, ${inviteCode}, ${inviteLink}, NOW(), NOW())
+            `
+            
+            // Try to add serviceId if column exists
             try {
               await prisma.$executeRaw`
                 UPDATE "Organization" 
                 SET "serviceId" = ${finalServiceId} 
-                WHERE id = ${createdOrg.id}
+                WHERE id = ${orgId}
               `
             } catch (updateError) {
-              console.warn('[Organization API] Could not update serviceId:', updateError)
+              console.warn('[Organization API] Could not update serviceId (column may not exist):', updateError)
             }
             
             // Re-fetch with subscription included
             organization = await prisma.organization.findUnique({
-              where: { id: createdOrg.id },
+              where: { id: orgId },
               include: {
                 subscription: {
                   select: {
