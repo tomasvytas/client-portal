@@ -60,7 +60,18 @@ export async function POST(request: NextRequest) {
       })
 
       // Start analysis in background (don't wait)
-      analyzeProduct(product.id, product.websiteUrl, product.name).catch((error) => {
+      if (!product.websiteUrl) {
+        await prisma.product.update({
+          where: { id: product.id },
+          data: { status: 'failed' },
+        })
+        return NextResponse.json(
+          { error: 'Product website URL is missing' },
+          { status: 400 }
+        )
+      }
+
+      analyzeProduct(product.id, product.websiteUrl, product.name || 'Unknown Product').catch((error) => {
         console.error('Error analyzing product:', error)
         prisma.product.update({
           where: { id: product.id },
