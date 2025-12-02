@@ -173,6 +173,11 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        // Ensure organization was created successfully
+        if (!organization) {
+          throw new Error('Failed to create organization')
+        }
+
         console.log(`[Organization API] Created organization ${organization.id} for user ${session.user.id}`)
 
         // Create subscription (demo mode - always active)
