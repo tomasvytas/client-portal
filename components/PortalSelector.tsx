@@ -59,8 +59,11 @@ export default function PortalSelector() {
     }
   }, [session, isServiceProvider, isAdmin])
 
-  // Only show for users with multiple roles (master admin can see all, or client-only users)
-  const canSwitch = isMasterAdmin || (isClient && !isServiceProvider && !isAdmin)
+  // Show portal selector if:
+  // 1. Master admin (can see all portals)
+  // 2. Service provider/admin (they'll only see Service Provider portal, not Client)
+  // 3. Client-only users (they'll only see Client portal)
+  const canSwitch = isMasterAdmin || isServiceProvider || isAdmin || isClient
 
   if (!canSwitch) {
     return null
