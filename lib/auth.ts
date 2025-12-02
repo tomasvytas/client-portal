@@ -95,6 +95,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         maxAge: 60 * 15, // 15 minutes
       },
     },
+    state: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 15, // 15 minutes
+      },
+    },
   },
   debug: process.env.NODE_ENV === 'development',
 })
