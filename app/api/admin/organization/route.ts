@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
           // If serviceId column doesn't exist, try without it
           if (serviceIdError?.message?.includes('serviceId') || serviceIdError?.code === 'P2003') {
             console.log('[Organization API] serviceId column may not exist, trying without it')
-            organization = await prisma.organization.create({
+            const createdOrg = await prisma.organization.create({
               data: {
                 name: organizationName,
                 slug: finalSlug,
@@ -133,6 +133,22 @@ export async function GET(request: NextRequest) {
                 inviteCode,
                 inviteLink,
               },
+            })
+            
+            // Update with serviceId if possible (migration might be needed)
+            try {
+              await prisma.$executeRaw`
+                UPDATE "Organization" 
+                SET "serviceId" = ${finalServiceId} 
+                WHERE id = ${createdOrg.id}
+              `
+            } catch (updateError) {
+              console.warn('[Organization API] Could not update serviceId:', updateError)
+            }
+            
+            // Re-fetch with subscription included
+            organization = await prisma.organization.findUnique({
+              where: { id: createdOrg.id },
               include: {
                 subscription: {
                   select: {
@@ -144,30 +160,6 @@ export async function GET(request: NextRequest) {
                 },
               },
             })
-            // Update with serviceId if possible (migration might be needed)
-            try {
-              await prisma.$executeRaw`
-                UPDATE "Organization" 
-                SET "serviceId" = ${finalServiceId} 
-                WHERE id = ${organization.id}
-              `
-              // Re-fetch to get serviceId
-              organization = await prisma.organization.findUnique({
-                where: { id: organization.id },
-                include: {
-                  subscription: {
-                    select: {
-                      plan: true,
-                      status: true,
-                      clientCount: true,
-                      currentPeriodEnd: true,
-                    },
-                  },
-                },
-              })
-            } catch (updateError) {
-              console.warn('[Organization API] Could not update serviceId:', updateError)
-            }
           } else {
             throw serviceIdError
           }
