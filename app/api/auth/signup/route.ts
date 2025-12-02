@@ -312,15 +312,17 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Update client count
-      await prisma.subscription.update({
-        where: { organizationId: organization.id },
-        data: {
-          clientCount: {
-            increment: 1,
+      // Update client count (only if subscription exists)
+      if (subscription) {
+        await prisma.subscription.update({
+          where: { organizationId: organization.id },
+          data: {
+            clientCount: {
+              increment: 1,
+            },
           },
-        },
-      })
+        })
+      }
 
       // If product website and name provided, create product and trigger analysis
       let productCreated = false
