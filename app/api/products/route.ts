@@ -90,13 +90,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Trigger analysis in background
+    // Trigger analysis in background (don't wait for it)
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     fetch(`${baseUrl}/api/products/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        productId: product.id,
         websiteUrl: normalizedUrl,
         productName: name.trim(),
       }),
