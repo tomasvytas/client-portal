@@ -29,38 +29,80 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { websiteUrl, productName } = body
+    const { productId, websiteUrl, productName } = body
 
-    if (!websiteUrl) {
+    // Support both productId (new flow) and websiteUrl (legacy flow)
+    if (productId) {
+      // New flow: product already exists, just analyze it
+      const product = await prisma.product.findUnique({
+        where: { id: productId },
+      })
+
+      if (!product) {
+        return NextResponse.json(
+          { error: 'Product not found' },
+          { status: 404 }
+        )
+      }
+
+      // Verify ownership
+      if (product.userId !== session.user.id) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 403 }
+        )
+      }
+
+      // Update status to analyzing
+      await prisma.product.update({
+        where: { id: productId },
+        data: { status: 'analyzing' },
+      })
+
+      // Start analysis in background (don't wait)
+      analyzeProduct(product.id, product.websiteUrl, product.name).catch((error) => {
+        console.error('Error analyzing product:', error)
+        prisma.product.update({
+          where: { id: product.id },
+          data: { status: 'failed' },
+        }).catch(console.error)
+      })
+
+      return NextResponse.json({
+        product,
+        message: 'Analysis started. This may take a few minutes.',
+      })
+    } else if (websiteUrl) {
+      // Legacy flow: create product and analyze
+      // Create product record
+      const product = await prisma.product.create({
+        data: {
+          userId: session.user.id,
+          name: productName || 'Unknown Product',
+          websiteUrl,
+          status: 'analyzing',
+        },
+      })
+
+      // Start analysis in background (don't wait)
+      analyzeProduct(product.id, websiteUrl, productName).catch((error) => {
+        console.error('Error analyzing product:', error)
+        prisma.product.update({
+          where: { id: product.id },
+          data: { status: 'failed' },
+        }).catch(console.error)
+      })
+
+      return NextResponse.json({
+        product,
+        message: 'Analysis started. This may take a few minutes.',
+      })
+    } else {
       return NextResponse.json(
-        { error: 'Website URL is required' },
+        { error: 'Either productId or websiteUrl is required' },
         { status: 400 }
       )
     }
-
-    // Create product record
-    const product = await prisma.product.create({
-      data: {
-        userId: session.user.id,
-        name: productName || 'Unknown Product',
-        websiteUrl,
-        status: 'analyzing',
-      },
-    })
-
-    // Start analysis in background (don't wait)
-    analyzeProduct(product.id, websiteUrl, productName).catch((error) => {
-      console.error('Error analyzing product:', error)
-      prisma.product.update({
-        where: { id: product.id },
-        data: { status: 'failed' },
-      }).catch(console.error)
-    })
-
-    return NextResponse.json({
-      product,
-      message: 'Analysis started. This may take a few minutes.',
-    })
   } catch (error: any) {
     console.error('Error starting product analysis:', error)
     return NextResponse.json(

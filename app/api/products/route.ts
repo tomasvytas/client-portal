@@ -96,8 +96,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        websiteUrl: normalizedUrl,
-        productName: name.trim(),
+        productId: product.id, // Pass the created product ID
       }),
     }).catch(err => {
       console.error('Error triggering product analysis:', err)
