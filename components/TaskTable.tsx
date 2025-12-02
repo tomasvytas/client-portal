@@ -83,11 +83,13 @@ export default function TaskTable() {
     fetchOrganization()
   }, [])
 
-  const fetchOrganization = async () => {
+  const fetchOrganization = async (retryCount = 0) => {
     setLoadingOrganization(true)
     setOrganizationError(null)
     try {
-      const res = await fetch('/api/admin/organization')
+      const res = await fetch('/api/admin/organization', {
+        cache: 'no-store',
+      })
       const data = await res.json()
       
       if (res.ok && data.organization) {
@@ -97,14 +99,42 @@ export default function TaskTable() {
           name: data.organization.name,
           serviceId: data.organization.serviceId,
         })
+        setOrganizationError(null)
       } else if (res.status === 401) {
         setOrganizationError('Unauthorized - Please check your permissions')
+      } else if (res.status === 404) {
+        // User not found - shouldn't happen but handle gracefully
+        setOrganizationError('User account not found. Please contact support.')
+      } else if (data.error) {
+        // If there's an error message, show it but also try to retry once
+        if (retryCount < 1) {
+          // Wait a bit and retry (organization might be getting created)
+          setTimeout(() => {
+            fetchOrganization(retryCount + 1)
+          }, 2000)
+          return
+        }
+        setOrganizationError(data.error || 'Failed to load organization information')
       } else if (!data.organization) {
+        // No organization found - retry once in case it's being created
+        if (retryCount < 1) {
+          setTimeout(() => {
+            fetchOrganization(retryCount + 1)
+          }, 2000)
+          return
+        }
         setOrganizationError('No organization found. Please ensure you have completed your subscription setup.')
       }
     } catch (error) {
       console.error('Error fetching organization:', error)
-      setOrganizationError('Failed to load organization information')
+      // Retry once on network errors
+      if (retryCount < 1) {
+        setTimeout(() => {
+          fetchOrganization(retryCount + 1)
+        }, 2000)
+        return
+      }
+      setOrganizationError('Failed to load organization information. Please refresh the page.')
     } finally {
       setLoadingOrganization(false)
     }
@@ -261,8 +291,17 @@ export default function TaskTable() {
                   Loading invite information...
                 </div>
               ) : organizationError ? (
-                <div className="text-[14px] text-[#FF3B30] bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-xl p-4">
-                  {organizationError}
+                <div className="space-y-3">
+                  <div className="text-[14px] text-[#FF3B30] bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-xl p-4">
+                    {organizationError}
+                  </div>
+                  <button
+                    onClick={() => fetchOrganization()}
+                    className="px-4 py-2 bg-[#007AFF] text-[#FFFFFF] rounded-xl hover:bg-[#0051D5] transition-colors text-[14px] font-semibold flex items-center gap-2"
+                  >
+                    <Loader2 className="w-4 h-4" />
+                    Retry
+                  </button>
                 </div>
               ) : organization ? (
                 <div className="flex flex-col sm:flex-row gap-3">

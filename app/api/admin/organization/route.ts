@@ -62,88 +62,101 @@ export async function GET(request: NextRequest) {
 
     // If user is a service provider but doesn't have an organization, create one (demo mode)
     if (!organization && (user.role === 'service_provider' || user.role === 'admin')) {
-      const organizationName = `${user.name || user.email?.split('@')[0] || 'My'}'s Organization`
-      const slug = generateSlug(organizationName)
-      const inviteCode = generateInviteCode()
-      const serviceId = generateServiceId()
-      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-      const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
+      try {
+        console.log(`[Organization API] Creating organization for user ${session.user.id} with role ${user.role}`)
+        const organizationName = `${user.name || user.email?.split('@')[0] || 'My'}'s Organization`
+        const slug = generateSlug(organizationName)
+        const inviteCode = generateInviteCode()
+        const serviceId = generateServiceId()
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
 
-      // Check if slug already exists
-      const existingSlug = await prisma.organization.findUnique({
-        where: { slug },
-      })
-
-      let finalSlug = slug
-      if (existingSlug) {
-        finalSlug = `${slug}-${Date.now()}`
-      }
-
-      // Ensure serviceId is unique
-      let finalServiceId = serviceId
-      let attempts = 0
-      while (attempts < 10) {
-        const existing = await prisma.organization.findUnique({
-          where: { serviceId: finalServiceId },
+        // Check if slug already exists
+        const existingSlug = await prisma.organization.findUnique({
+          where: { slug },
         })
-        if (!existing) break
-        finalServiceId = generateServiceId()
-        attempts++
+
+        let finalSlug = slug
+        if (existingSlug) {
+          finalSlug = `${slug}-${Date.now()}`
+        }
+
+        // Ensure serviceId is unique
+        let finalServiceId = serviceId
+        let attempts = 0
+        while (attempts < 10) {
+          const existing = await prisma.organization.findUnique({
+            where: { serviceId: finalServiceId },
+          })
+          if (!existing) break
+          finalServiceId = generateServiceId()
+          attempts++
+        }
+
+        // Calculate subscription dates (demo mode - default to 6 months)
+        const now = new Date()
+        const periodEnd = new Date()
+        periodEnd.setMonth(periodEnd.getMonth() + 6) // Default 6 months for demo
+
+        // Create organization
+        organization = await prisma.organization.create({
+          data: {
+            name: organizationName,
+            slug: finalSlug,
+            serviceId: finalServiceId,
+            ownerId: session.user.id,
+            inviteCode,
+            inviteLink,
+          },
+          include: {
+            subscription: {
+              select: {
+                plan: true,
+                status: true,
+                clientCount: true,
+                currentPeriodEnd: true,
+              },
+            },
+          },
+        })
+
+        console.log(`[Organization API] Created organization ${organization.id} for user ${session.user.id}`)
+
+        // Create subscription (demo mode - always active)
+        await prisma.subscription.create({
+          data: {
+            organizationId: organization.id,
+            plan: '6_month',
+            status: 'active', // Demo mode - always active
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
+            clientCount: 0,
+          },
+        })
+
+        console.log(`[Organization API] Created subscription for organization ${organization.id}`)
+
+        // Fetch organization again with subscription
+        organization = await prisma.organization.findUnique({
+          where: { id: organization.id },
+          include: {
+            subscription: {
+              select: {
+                plan: true,
+                status: true,
+                clientCount: true,
+                currentPeriodEnd: true,
+              },
+            },
+          },
+        })
+
+        console.log(`[Organization API] Fetched organization ${organization?.id} with subscription`)
+      } catch (createError: any) {
+        console.error('[Organization API] Error creating organization:', createError)
+        // Don't throw - let it return null so the UI can handle it
+        organization = null
       }
-
-      // Calculate subscription dates (demo mode - default to 6 months)
-      const now = new Date()
-      const periodEnd = new Date()
-      periodEnd.setMonth(periodEnd.getMonth() + 6) // Default 6 months for demo
-
-      // Create organization
-      organization = await prisma.organization.create({
-        data: {
-          name: organizationName,
-          slug: finalSlug,
-          serviceId: finalServiceId,
-          ownerId: session.user.id,
-          inviteCode,
-          inviteLink,
-        },
-        include: {
-          subscription: {
-            select: {
-              plan: true,
-              status: true,
-              clientCount: true,
-              currentPeriodEnd: true,
-            },
-          },
-        },
-      })
-
-      // Create subscription (demo mode - always active)
-      await prisma.subscription.create({
-        data: {
-          organizationId: organization.id,
-          plan: '6_month',
-          status: 'active', // Demo mode - always active
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
-          clientCount: 0,
-        },
-      })
-
-      // Fetch organization again with subscription
-      organization = await prisma.organization.findUnique({
-        where: { id: organization.id },
-        include: {
-          subscription: {
-            select: {
-              plan: true,
-              status: true,
-              clientCount: true,
-              currentPeriodEnd: true,
-            },
-          },
-        },
-      })
     }
 
     if (!organization) {
