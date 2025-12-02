@@ -48,6 +48,8 @@ export default function Dashboard() {
   const [addingProvider, setAddingProvider] = useState(false)
   const [stats, setStats] = useState<{ totalTasks: number; totalSpending: number; companyName: string | null } | null>(null)
   const [loadingStats, setLoadingStats] = useState(true)
+  const [products, setProducts] = useState<Array<{ id: string; name: string | null; websiteUrl: string | null; status: string; productType: string | null; createdAt: string }>>([])
+  const [loadingProducts, setLoadingProducts] = useState(false)
   const [showCompanyModal, setShowCompanyModal] = useState(false)
   const [companyName, setCompanyName] = useState('')
   const [savingCompany, setSavingCompany] = useState(false)
@@ -78,7 +80,23 @@ export default function Dashboard() {
     fetchProviders()
     fetchTasks()
     fetchStats()
+    fetchProducts()
   }, [])
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true)
+    try {
+      const res = await fetch('/api/products')
+      if (res.ok) {
+        const data = await res.json()
+        setProducts(data.products || [])
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    } finally {
+      setLoadingProducts(false)
+    }
+  }
 
   useEffect(() => {
     // Set company name from stats when loaded
@@ -191,8 +209,8 @@ export default function Dashboard() {
         setProductWebsite('')
         setProductName('')
         setShowProductWebsiteModal(false)
-        // Redirect to products page to see the analysis
-        router.push('/products')
+        // Refresh products list
+        await fetchProducts()
       } else {
         const error = await res.json()
         alert(error.error || 'Failed to add product')
@@ -409,26 +427,83 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Product Website Prompt */}
+                {/* Products Section */}
                 {providers.length > 0 && (
-                  <div className="mb-6 bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 rounded-2xl p-6 border border-[#30D158]/20">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-[#30D158]/20 rounded-xl">
-                        <Sparkles className="w-6 h-6 text-[#30D158]" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-[18px] font-semibold text-[#FFFFFF] mb-2">Add Your Product for Analysis</h3>
-                        <p className="text-[14px] text-[#8E8E93] mb-4">
-                          Add your product website to get AI-powered analysis. This helps service providers understand your brand and create better briefs.
-                        </p>
-                        <button
-                          onClick={() => setShowProductWebsiteModal(true)}
-                          className="px-6 py-2.5 bg-[#30D158] text-[#FFFFFF] rounded-xl hover:bg-[#28A745] transition-colors text-[15px] font-semibold"
-                        >
-                          Add Product
-                        </button>
-                      </div>
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[20px] font-semibold text-[#FFFFFF]">Products</h3>
+                      <button
+                        onClick={() => setShowProductWebsiteModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#30D158] text-[#FFFFFF] rounded-xl hover:bg-[#28A745] transition-colors text-[14px] font-semibold"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Product
+                      </button>
                     </div>
+                    
+                    {loadingProducts ? (
+                      <div className="bg-[#1C1C1E] rounded-2xl p-8 text-center border border-[#38383A]/30">
+                        <div className="text-[#8E8E93] text-[15px]">Loading products...</div>
+                      </div>
+                    ) : products.length === 0 ? (
+                      <div className="bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 rounded-2xl p-6 border border-[#30D158]/20">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-[#30D158]/20 rounded-xl">
+                            <Sparkles className="w-6 h-6 text-[#30D158]" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-[18px] font-semibold text-[#FFFFFF] mb-2">Add Your Product for Analysis</h3>
+                            <p className="text-[14px] text-[#8E8E93] mb-4">
+                              Add your product website to get AI-powered analysis. This helps service providers understand your brand and create better briefs.
+                            </p>
+                            <button
+                              onClick={() => setShowProductWebsiteModal(true)}
+                              className="px-6 py-2.5 bg-[#30D158] text-[#FFFFFF] rounded-xl hover:bg-[#28A745] transition-colors text-[15px] font-semibold"
+                            >
+                              Add Product
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {products.map((product) => (
+                          <div
+                            key={product.id}
+                            onClick={() => router.push('/products')}
+                            className="bg-[#1C1C1E] rounded-2xl p-5 border border-[#38383A]/30 hover:bg-[#2C2C2E] cursor-pointer transition-all"
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-[16px] font-semibold text-[#FFFFFF] truncate mb-1">
+                                  {product.name || 'Unnamed Product'}
+                                </h4>
+                                {product.websiteUrl && (
+                                  <p className="text-[13px] text-[#8E8E93] truncate">
+                                    {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                                  </p>
+                                )}
+                              </div>
+                              <span className={`px-2 py-1 text-[11px] font-semibold rounded flex-shrink-0 ${
+                                product.status === 'completed'
+                                  ? 'bg-[#30D158]/20 text-[#30D158]'
+                                  : product.status === 'analyzing' || product.status === 'pending'
+                                  ? 'bg-[#007AFF]/20 text-[#007AFF]'
+                                  : 'bg-[#FF3B30]/20 text-[#FF3B30]'
+                              }`}>
+                                {product.status}
+                              </span>
+                            </div>
+                            {product.productType && (
+                              <div className="mt-3 pt-3 border-t border-[#38383A]/30">
+                                <span className="text-[12px] text-[#8E8E93]">Type: </span>
+                                <span className="text-[12px] text-[#FFFFFF] font-medium">{product.productType}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </>
