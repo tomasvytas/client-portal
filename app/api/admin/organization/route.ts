@@ -99,26 +99,79 @@ export async function GET(request: NextRequest) {
         periodEnd.setMonth(periodEnd.getMonth() + 6) // Default 6 months for demo
 
         // Create organization
-        organization = await prisma.organization.create({
-          data: {
-            name: organizationName,
-            slug: finalSlug,
-            serviceId: finalServiceId,
-            ownerId: session.user.id,
-            inviteCode,
-            inviteLink,
-          },
-          include: {
-            subscription: {
-              select: {
-                plan: true,
-                status: true,
-                clientCount: true,
-                currentPeriodEnd: true,
+        // Try with serviceId first, fallback without it if column doesn't exist
+        try {
+          organization = await prisma.organization.create({
+            data: {
+              name: organizationName,
+              slug: finalSlug,
+              serviceId: finalServiceId,
+              ownerId: session.user.id,
+              inviteCode,
+              inviteLink,
+            },
+            include: {
+              subscription: {
+                select: {
+                  plan: true,
+                  status: true,
+                  clientCount: true,
+                  currentPeriodEnd: true,
+                },
               },
             },
-          },
-        })
+          })
+        } catch (serviceIdError: any) {
+          // If serviceId column doesn't exist, try without it
+          if (serviceIdError?.message?.includes('serviceId') || serviceIdError?.code === 'P2003') {
+            console.log('[Organization API] serviceId column may not exist, trying without it')
+            organization = await prisma.organization.create({
+              data: {
+                name: organizationName,
+                slug: finalSlug,
+                ownerId: session.user.id,
+                inviteCode,
+                inviteLink,
+              },
+              include: {
+                subscription: {
+                  select: {
+                    plan: true,
+                    status: true,
+                    clientCount: true,
+                    currentPeriodEnd: true,
+                  },
+                },
+              },
+            })
+            // Update with serviceId if possible (migration might be needed)
+            try {
+              await prisma.$executeRawUnsafe(
+                `UPDATE "Organization" SET "serviceId" = $1 WHERE id = $2`,
+                finalServiceId,
+                organization.id
+              )
+              // Re-fetch to get serviceId
+              organization = await prisma.organization.findUnique({
+                where: { id: organization.id },
+                include: {
+                  subscription: {
+                    select: {
+                      plan: true,
+                      status: true,
+                      clientCount: true,
+                      currentPeriodEnd: true,
+                    },
+                  },
+                },
+              })
+            } catch (updateError) {
+              console.warn('[Organization API] Could not update serviceId:', updateError)
+            }
+          } else {
+            throw serviceIdError
+          }
+        }
 
         console.log(`[Organization API] Created organization ${organization.id} for user ${session.user.id}`)
 
@@ -154,20 +207,38 @@ export async function GET(request: NextRequest) {
         console.log(`[Organization API] Fetched organization ${organization?.id} with subscription`)
       } catch (createError: any) {
         console.error('[Organization API] Error creating organization:', createError)
-        // Don't throw - let it return null so the UI can handle it
-        organization = null
+        // Return the actual error so we can debug
+        return NextResponse.json(
+          { 
+            error: 'Failed to create organization',
+            details: createError?.message || 'Unknown error',
+            code: createError?.code,
+          },
+          { status: 500 }
+        )
       }
     }
 
     if (!organization) {
-      return NextResponse.json({ organization: null })
+      // Only return null if user is not a service provider/admin
+      if (user.role !== 'service_provider' && user.role !== 'admin') {
+        return NextResponse.json({ organization: null })
+      }
+      // If user is service provider/admin but no org, something went wrong
+      return NextResponse.json(
+        { 
+          error: 'Organization not found and could not be created',
+          userRole: user.role,
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
       organization: {
         id: organization.id,
         name: organization.name,
-        serviceId: organization.serviceId,
+        serviceId: organization.serviceId || null, // Handle case where serviceId might not exist
         inviteCode: organization.inviteCode,
         inviteLink: organization.inviteLink,
         subscription: organization.subscription
@@ -181,12 +252,18 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    if (error.message.includes('Unauthorized')) {
+    console.error('[Organization API] Top-level error:', error)
+    if (error.message?.includes('Unauthorized')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    console.error('Error fetching organization:', error)
+    // Return more detailed error information
     return NextResponse.json(
-      { error: 'Failed to fetch organization' },
+      { 
+        error: 'Failed to fetch organization',
+        details: error?.message || 'Unknown error',
+        code: error?.code,
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
+      },
       { status: 500 }
     )
   }

@@ -106,15 +106,21 @@ export default function TaskTable() {
         // User not found - shouldn't happen but handle gracefully
         setOrganizationError('User account not found. Please contact support.')
       } else if (data.error) {
+        // Show detailed error message if available
+        const errorMsg = data.details 
+          ? `${data.error}: ${data.details}` 
+          : data.error
+        console.error('[TaskTable] Organization API error:', data)
+        
         // If there's an error message, show it but also try to retry once
-        if (retryCount < 1) {
-          // Wait a bit and retry (organization might be getting created)
+        if (retryCount < 1 && res.status >= 500) {
+          // Wait a bit and retry (organization might be getting created or DB issue)
           setTimeout(() => {
             fetchOrganization(retryCount + 1)
           }, 2000)
           return
         }
-        setOrganizationError(data.error || 'Failed to load organization information')
+        setOrganizationError(errorMsg)
       } else if (!data.organization) {
         // No organization found - retry once in case it's being created
         if (retryCount < 1) {
