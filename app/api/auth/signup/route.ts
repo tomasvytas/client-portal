@@ -241,6 +241,11 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Ensure organization was created successfully
+      if (!organization) {
+        throw new Error('Failed to create organization')
+      }
+
       // Create subscription (demo mode - always active)
       await prisma.subscription.create({
         data: {
