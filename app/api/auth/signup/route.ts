@@ -210,7 +210,10 @@ export async function POST(request: NextRequest) {
         // If serviceId column doesn't exist, create using raw SQL
         if (createError?.code === 'P2022' || createError?.message?.includes('serviceId')) {
           console.log('[Signup] Creating organization using raw SQL (serviceId column missing)')
-          const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+          // Generate CUID-like ID
+          const timestamp = Date.now().toString(36)
+          const random = Math.random().toString(36).substring(2, 10)
+          const orgId = `c${timestamp}${random}`
           
           // Create organization using raw SQL
           await prisma.$executeRaw`
