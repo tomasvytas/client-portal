@@ -26,6 +26,16 @@ function generateInviteCode(): string {
   return Math.random().toString(36).substring(2, 10).toUpperCase()
 }
 
+// Generate Service ID (e.g., SVC-XXXXX)
+function generateServiceId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Exclude confusing chars
+  let serviceId = 'SVC-'
+  for (let i = 0; i < 5; i++) {
+    serviceId += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return serviceId
+}
+
 async function setupProSubscriber(
   email: string,
   organizationName: string = 'My Organization',
@@ -115,6 +125,7 @@ async function setupProSubscriber(
     // Create organization
     const slug = generateSlug(organizationName)
     const inviteCode = generateInviteCode()
+    const serviceId = generateServiceId()
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
 
@@ -126,6 +137,18 @@ async function setupProSubscriber(
     let finalSlug = slug
     if (existingSlug) {
       finalSlug = `${slug}-${Date.now()}`
+    }
+
+    // Ensure serviceId is unique
+    let finalServiceId = serviceId
+    let attempts = 0
+    while (attempts < 10) {
+      const existing = await prisma.organization.findUnique({
+        where: { serviceId: finalServiceId },
+      })
+      if (!existing) break
+      finalServiceId = generateServiceId()
+      attempts++
     }
 
     // Calculate subscription dates
@@ -144,6 +167,7 @@ async function setupProSubscriber(
       data: {
         name: organizationName,
         slug: finalSlug,
+        serviceId: finalServiceId,
         ownerId: user.id,
         inviteCode,
         inviteLink,
@@ -172,6 +196,7 @@ async function setupProSubscriber(
 
     console.log(`✅ Successfully set up ${email} as PRO subscriber`)
     console.log(`   Organization: ${organizationName}`)
+    console.log(`   Service ID: ${finalServiceId}`)
     console.log(`   Plan: ${plan}`)
     console.log(`   Invite Code: ${inviteCode}`)
     console.log(`   Invite Link: ${inviteLink}`)
