@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   const [migrating, setMigrating] = useState(false)
   const [migrationResult, setMigrationResult] = useState<{ success: boolean; message: string } | null>(null)
   const [isMasterAdmin, setIsMasterAdmin] = useState(false)
-  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
+  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string; serviceId: string } | null>(null)
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
   const [userInfo, setUserInfo] = useState<any>(null)
   const [loadingUserInfo, setLoadingUserInfo] = useState(false)
@@ -58,6 +58,7 @@ export default function AdminDashboard() {
             inviteCode: data.organization.inviteCode,
             inviteLink: data.organization.inviteLink,
             name: data.organization.name,
+            serviceId: data.organization.serviceId,
           })
         }
       })
@@ -78,6 +79,7 @@ export default function AdminDashboard() {
                 inviteCode: data.user.organization.inviteCode,
                 inviteLink: data.user.organization.inviteLink,
                 name: data.user.organization.name,
+                serviceId: data.user.organization.serviceId,
               })
             }
           }
@@ -211,6 +213,23 @@ export default function AdminDashboard() {
           </div>
         </div>
       </nav>
+
+      {/* Service ID Badge - Always visible at top */}
+      {organization?.serviceId && (
+        <div className="bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 border-b border-[#30D158]/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 bg-[#1C1C1E] border border-[#30D158]/30 rounded-xl">
+                <div className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">Service ID</div>
+                <div className="text-[18px] font-bold text-[#30D158] font-mono">{organization.serviceId}</div>
+              </div>
+              <div className="text-[13px] text-[#8E8E93] hidden sm:block">
+                Your unique service identifier
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="bg-[#1C1C1E] border-b border-[#38383A]/50">

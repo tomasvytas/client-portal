@@ -16,6 +16,16 @@ function generateInviteCode(): string {
   return Math.random().toString(36).substring(2, 10).toUpperCase()
 }
 
+// Generate Service ID (e.g., SVC-XXXXX)
+function generateServiceId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Exclude confusing chars
+  let serviceId = 'SVC-'
+  for (let i = 0; i < 5; i++) {
+    serviceId += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return serviceId
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()
@@ -66,6 +76,7 @@ export async function GET(request: NextRequest) {
 
     const slug = generateSlug(organizationName)
     const inviteCode = generateInviteCode()
+    const serviceId = generateServiceId()
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
 
@@ -77,6 +88,18 @@ export async function GET(request: NextRequest) {
     let finalSlug = slug
     if (existingSlug) {
       finalSlug = `${slug}-${Date.now()}`
+    }
+
+    // Ensure serviceId is unique
+    let finalServiceId = serviceId
+    let attempts = 0
+    while (attempts < 10) {
+      const existing = await prisma.organization.findUnique({
+        where: { serviceId: finalServiceId },
+      })
+      if (!existing) break
+      finalServiceId = generateServiceId()
+      attempts++
     }
 
     // Calculate subscription dates
@@ -95,6 +118,7 @@ export async function GET(request: NextRequest) {
       data: {
         name: organizationName,
         slug: finalSlug,
+        serviceId: finalServiceId,
         ownerId: session.user.id,
         inviteCode,
         inviteLink,

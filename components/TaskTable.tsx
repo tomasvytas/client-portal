@@ -73,7 +73,7 @@ export default function TaskTable() {
   const [selectedTask, setSelectedTask] = useState<TaskDetail | null>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
+  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string; serviceId: string } | null>(null)
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
   const [loadingOrganization, setLoadingOrganization] = useState(true)
   const [organizationError, setOrganizationError] = useState<string | null>(null)
@@ -95,6 +95,7 @@ export default function TaskTable() {
           inviteCode: data.organization.inviteCode,
           inviteLink: data.organization.inviteLink,
           name: data.organization.name,
+          serviceId: data.organization.serviceId,
         })
       } else if (res.status === 401) {
         setOrganizationError('Unauthorized - Please check your permissions')

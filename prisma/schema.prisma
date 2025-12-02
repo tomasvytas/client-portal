@@ -160,6 +160,7 @@ model Organization {
   id              String   @id @default(cuid())
   name            String   // Organization/service provider name
   slug            String   @unique // URL-friendly identifier
+  serviceId        String   @unique // Service ID for easy identification (e.g., SVC-XXXXX)
   ownerId        String   @unique // User who owns this organization (service provider)
   owner          User     @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   inviteCode     String   @unique // Unique code for clients to join
@@ -174,6 +175,7 @@ model Organization {
 
   @@index([ownerId])
   @@index([inviteCode])
+  @@index([serviceId])
 }
 
 // Subscription model for service providers

@@ -32,6 +32,7 @@ interface ClientDetail extends Client {
 interface Organization {
   id: string
   name: string
+  serviceId: string
   inviteCode: string
   inviteLink: string
   subscription: {
@@ -183,6 +184,14 @@ export default function ClientsManagement() {
           <p className="text-[14px] text-[#8E8E93] mb-6">Manage your organization and invite clients</p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
+                Service ID
+              </label>
+              <div className="px-4 py-2 bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 border border-[#30D158]/30 rounded-xl">
+                <p className="text-[18px] font-bold text-[#30D158] font-mono">{organization.serviceId}</p>
+              </div>
+            </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
                 Organization Name

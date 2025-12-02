@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       organization: {
         id: organization.id,
         name: organization.name,
+        serviceId: organization.serviceId,
         inviteCode: organization.inviteCode,
         inviteLink: organization.inviteLink,
         subscription: organization.subscription

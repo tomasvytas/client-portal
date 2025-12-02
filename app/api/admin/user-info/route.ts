@@ -62,6 +62,7 @@ export async function GET(request: NextRequest) {
           ? {
               id: user.ownedOrganization.id,
               name: user.ownedOrganization.name,
+              serviceId: user.ownedOrganization.serviceId,
               inviteCode: user.ownedOrganization.inviteCode,
               inviteLink: user.ownedOrganization.inviteLink,
               subscription: user.ownedOrganization.subscription

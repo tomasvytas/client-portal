@@ -8,6 +8,16 @@ function generateInviteCode(): string {
   return randomBytes(8).toString('hex').toUpperCase()
 }
 
+// Generate Service ID (e.g., SVC-XXXXX)
+function generateServiceId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Exclude confusing chars
+  let serviceId = 'SVC-'
+  for (let i = 0; i < 5; i++) {
+    serviceId += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return serviceId
+}
+
 // Generate URL-friendly slug from name
 function generateSlug(name: string): string {
   return name
@@ -112,19 +122,79 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // If service provider, return user info - organization will be created after payment
+    // If service provider, create organization immediately (demo mode - bypass payment)
     if (userRole === 'service_provider') {
+      const slug = generateSlug(organizationName)
+      const inviteCode = generateInviteCode()
+      const serviceId = generateServiceId()
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+      const inviteLink = `${baseUrl}/auth/signup?invite=${inviteCode}`
+
+      // Check if slug already exists
+      const existingSlug = await prisma.organization.findUnique({
+        where: { slug },
+      })
+
+      let finalSlug = slug
+      if (existingSlug) {
+        finalSlug = `${slug}-${Date.now()}`
+      }
+
+      // Ensure serviceId is unique
+      let finalServiceId = serviceId
+      let attempts = 0
+      while (attempts < 10) {
+        const existing = await prisma.organization.findUnique({
+          where: { serviceId: finalServiceId },
+        })
+        if (!existing) break
+        finalServiceId = generateServiceId()
+        attempts++
+      }
+
+      // Calculate subscription dates (demo mode - default to 6 months)
+      const now = new Date()
+      const periodEnd = new Date()
+      periodEnd.setMonth(periodEnd.getMonth() + 6) // Default 6 months for demo
+
+      // Create organization
+      const organization = await prisma.organization.create({
+        data: {
+          name: organizationName,
+          slug: finalSlug,
+          serviceId: finalServiceId,
+          ownerId: user.id,
+          inviteCode,
+          inviteLink,
+        },
+      })
+
+      // Create subscription (demo mode - always active)
+      await prisma.subscription.create({
+        data: {
+          organizationId: organization.id,
+          plan: subscriptionPlan || '6_month',
+          status: 'active', // Demo mode - always active
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          clientCount: 0,
+        },
+      })
+
       return NextResponse.json({
-        message: 'Account created. Redirecting to payment...',
+        message: 'Service provider account created successfully',
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
           role: 'service_provider',
         },
-        requiresPayment: true,
-        organizationName,
-        subscriptionPlan,
+        organization: {
+          id: organization.id,
+          name: organization.name,
+          serviceId: organization.serviceId,
+          inviteCode: organization.inviteCode,
+        },
       })
     }
 
