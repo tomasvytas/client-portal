@@ -73,7 +73,7 @@ export default function TaskTable() {
   const [selectedTask, setSelectedTask] = useState<TaskDetail | null>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string; serviceId: string } | null>(null)
+  const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
   const [loadingOrganization, setLoadingOrganization] = useState(true)
   const [organizationError, setOrganizationError] = useState<string | null>(null)
@@ -97,7 +97,6 @@ export default function TaskTable() {
           inviteCode: data.organization.inviteCode,
           inviteLink: data.organization.inviteLink,
           name: data.organization.name,
-          serviceId: data.organization.serviceId,
         })
         setOrganizationError(null)
       } else if (res.status === 401) {
@@ -280,7 +279,7 @@ export default function TaskTable() {
 
   return (
     <div className="space-y-6">
-      {/* Invite Code Badge - Always visible for service providers */}
+      {/* Client Invite Code Badge - Always visible for service providers */}
       <div className="bg-gradient-to-r from-[#007AFF]/10 to-[#5856D6]/10 rounded-2xl p-6 border border-[#007AFF]/20">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1">
@@ -289,7 +288,7 @@ export default function TaskTable() {
                 <h3 className="text-[18px] font-semibold text-[#FFFFFF]">Invite Clients</h3>
               </div>
               <p className="text-[14px] text-[#8E8E93] mb-3">
-                Share your invite code or link with clients to join your organization
+                Share your client invite code or link with clients to join your organization
               </p>
               {loadingOrganization ? (
                 <div className="text-[14px] text-[#8E8E93] flex items-center gap-2">
@@ -314,7 +313,7 @@ export default function TaskTable() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <div className="px-4 py-3 bg-[#1C1C1E] border border-[#38383A] rounded-xl flex-1">
-                        <div className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">Invite Code</div>
+                        <div className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-1">Client Invite Code</div>
                         <div className="text-[20px] font-bold text-[#007AFF] font-mono">{organization.inviteCode}</div>
                       </div>
                       <button

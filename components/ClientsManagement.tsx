@@ -186,14 +186,6 @@ export default function ClientsManagement() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
-                Service ID
-              </label>
-              <div className="px-4 py-2 bg-gradient-to-r from-[#30D158]/10 to-[#34C759]/10 border border-[#30D158]/30 rounded-xl">
-                <p className="text-[18px] font-bold text-[#30D158] font-mono">{organization.serviceId}</p>
-              </div>
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
                 Organization Name
               </label>
               <p className="text-[15px] text-[#FFFFFF]">{organization.name}</p>
@@ -216,7 +208,7 @@ export default function ClientsManagement() {
           <div className="pt-6 border-t border-[#38383A]/30 space-y-4">
             <div>
               <label className="block text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide mb-2">
-                Invite Code
+                Client Invite Code
               </label>
               <div className="flex items-center gap-2">
                 <input

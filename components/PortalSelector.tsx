@@ -32,8 +32,30 @@ export default function PortalSelector() {
     }
   }
 
-  // Only show for testing account or users with multiple roles
-  const canSwitch = session?.user?.email === 'tv.vytas@gmail.com' || (isAdmin && isServiceProvider)
+  // Check if user is a client (has client role or is linked to organizations as a client)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    const checkIfClient = async () => {
+      try {
+        const res = await fetch('/api/client/providers')
+        if (res.ok) {
+          const data = await res.json()
+          // If user has providers or is a client role, they can access client portal
+          setIsClient(data.providers && data.providers.length > 0)
+        }
+      } catch (error) {
+        // If error, check role
+        setIsClient(false)
+      }
+    }
+    if (session) {
+      checkIfClient()
+    }
+  }, [session])
+
+  // Only show for users with multiple roles (client + service provider/admin, or master admin)
+  const canSwitch = (isClient && (isServiceProvider || isAdmin)) || isMasterAdmin
 
   if (!canSwitch) {
     return null
@@ -49,7 +71,7 @@ export default function PortalSelector() {
       name: 'Client Portal',
       icon: Users,
       path: '/',
-      available: true,
+      available: isClient, // Only show if user is actually a client
       description: 'View your tasks and chat with service providers'
     },
     {
