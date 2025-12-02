@@ -10,12 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Only service providers have organizations
-    if (!(await isServiceProvider())) {
-      return NextResponse.json({ organization: null })
-    }
-
-    // Get user's organization
+    // Get user's organization (check if user owns an organization)
     const organization = await prisma.organization.findUnique({
       where: { ownerId: session.user.id },
       include: {
