@@ -32,30 +32,35 @@ export default function PortalSelector() {
     }
   }
 
-  // Check if user is a client (has client role or is linked to organizations as a client)
+  // Check if user is a client (but NOT a service provider - service providers shouldn't see client portal)
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
     const checkIfClient = async () => {
+      // If user is a service provider, they should not see client portal
+      if (isServiceProvider || isAdmin) {
+        setIsClient(false)
+        return
+      }
+      
       try {
         const res = await fetch('/api/client/providers')
         if (res.ok) {
           const data = await res.json()
-          // If user has providers or is a client role, they can access client portal
+          // If user has providers and is NOT a service provider, they can access client portal
           setIsClient(data.providers && data.providers.length > 0)
         }
       } catch (error) {
-        // If error, check role
         setIsClient(false)
       }
     }
     if (session) {
       checkIfClient()
     }
-  }, [session])
+  }, [session, isServiceProvider, isAdmin])
 
-  // Only show for users with multiple roles (client + service provider/admin, or master admin)
-  const canSwitch = (isClient && (isServiceProvider || isAdmin)) || isMasterAdmin
+  // Only show for users with multiple roles (master admin can see all, or client-only users)
+  const canSwitch = isMasterAdmin || (isClient && !isServiceProvider && !isAdmin)
 
   if (!canSwitch) {
     return null
@@ -71,7 +76,7 @@ export default function PortalSelector() {
       name: 'Client Portal',
       icon: Users,
       path: '/',
-      available: isClient, // Only show if user is actually a client
+      available: isClient && !isServiceProvider && !isAdmin, // Only show if user is a client and NOT a service provider
       description: 'View your tasks and chat with service providers'
     },
     {
