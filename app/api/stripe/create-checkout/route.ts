@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
     // Create Stripe checkout session
+    // All subscriptions cost 1 EUR (demo/testing mode)
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'payment', // One-time payment for subscription periods
       payment_method_types: ['card'],
@@ -52,9 +53,9 @@ export async function POST(request: NextRequest) {
             currency: 'eur',
             product_data: {
               name: PLAN_NAMES[subscriptionPlan],
-              description: `Subscription for ${organizationName}`,
+              description: `Subscription for ${organizationName} - Full ${subscriptionPlan.replace('_', ' ')} subscription`,
             },
-            unit_amount: PLAN_PRICES[subscriptionPlan],
+            unit_amount: 100, // 1 EUR (100 cents) for all plans
           },
           quantity: 1,
         },
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId: session.user.id,
         organizationName,
-        subscriptionPlan,
+        subscriptionPlan, // Keep the plan in metadata so we can create the correct subscription period
       },
       customer_email: session.user.email || undefined,
     })
