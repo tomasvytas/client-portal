@@ -121,6 +121,20 @@ function SignInForm() {
           }
         }
 
+        // Check user role and redirect accordingly
+        const userRes = await fetch('/api/auth/session')
+        const userData = await userRes.json()
+        
+        // Check if user is service provider/admin
+        const checkRes = await fetch('/api/admin/check')
+        if (checkRes.ok) {
+          const checkData = await checkRes.json()
+          if (checkData.isServiceProvider || checkData.isAdmin || checkData.isMasterAdmin) {
+            router.push('/admin')
+            return
+          }
+        }
+        
         router.push('/')
       } else {
         // Sign in
@@ -132,6 +146,16 @@ function SignInForm() {
 
         if (result?.error) {
           throw new Error('Invalid email or password')
+        }
+
+        // Check user role and redirect accordingly
+        const checkRes = await fetch('/api/admin/check')
+        if (checkRes.ok) {
+          const checkData = await checkRes.json()
+          if (checkData.isServiceProvider || checkData.isAdmin || checkData.isMasterAdmin) {
+            router.push('/admin')
+            return
+          }
         }
 
         router.push('/')
