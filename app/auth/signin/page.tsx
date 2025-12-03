@@ -22,13 +22,17 @@ function SignInForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Check for invite code in URL
+  // Check for invite code and error in URL
   useEffect(() => {
     const invite = searchParams?.get('invite')
+    const errorParam = searchParams?.get('error')
     if (invite) {
       setInviteCode(invite)
       setRole('client')
       setIsSignUp(true)
+    }
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam))
     }
   }, [searchParams])
 
