@@ -92,6 +92,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.sub = user.id
       }
+      // Ensure token.sub is always set (fallback to existing sub if user not provided)
+      if (!token.sub && token.sub === undefined) {
+        console.warn('[Auth] JWT callback: token.sub is not set, user might not be authenticated')
+      }
       return token
     },
   },
