@@ -628,8 +628,10 @@ export default function AdminDashboard() {
                 </>
               )}
             </div>
+            )}
 
-            {/* Database Migration */}
+            {/* Database Migration - Only show to actual admins, not service providers */}
+            {(isAdmin || isMasterAdmin) && (
             <div className="pt-8 border-t border-[#38383A]/30">
               <h3 className="text-[17px] font-semibold mb-4 text-[#FFFFFF]">Database Migration</h3>
               <p className="text-[14px] text-[#8E8E93] mb-4">
@@ -673,7 +675,8 @@ export default function AdminDashboard() {
                 )}
               </button>
             </div>
-            </div>
+            )}
+          </div>
           </div>
         )}
       </main>
