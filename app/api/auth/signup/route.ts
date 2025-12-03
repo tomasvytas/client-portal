@@ -355,14 +355,30 @@ export async function POST(request: NextRequest) {
           })
 
           // Start analysis in background (don't wait for it)
-          analyzeProduct(product.id, websiteUrl, productName.trim()).catch((error) => {
-            console.error('Error analyzing product during signup:', error)
-            // Update product status to failed if analysis fails
-            prisma.product.update({
-              where: { id: product.id },
-              data: { status: 'failed' },
-            }).catch(console.error)
-          })
+          // Use setTimeout to ensure it runs after the response is sent
+          setTimeout(() => {
+            analyzeProduct(product.id, websiteUrl, productName.trim()).catch((error) => {
+              console.error('[Signup] Error analyzing product during signup:', error)
+              console.error('[Signup] Error details:', {
+                productId: product.id,
+                errorMessage: error?.message,
+                errorStack: error?.stack,
+              })
+              // Update product status to failed if analysis fails
+              prisma.product.update({
+                where: { id: product.id },
+                data: { 
+                  status: 'failed',
+                  analysisData: {
+                    error: error?.message || 'Analysis failed during signup',
+                    timestamp: new Date().toISOString(),
+                  },
+                },
+              }).catch((updateError) => {
+                console.error('[Signup] Failed to update product status:', updateError)
+              })
+            })
+          }, 100) // Small delay to ensure signup response is sent first
         } catch (error: any) {
           console.error('Error creating product during signup:', error)
           // Don't fail registration if product creation fails
