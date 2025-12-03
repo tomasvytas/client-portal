@@ -58,7 +58,15 @@ export async function POST(
 ) {
   try {
     const session = await auth()
+    console.log('[Messages API] Session check:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+    })
+    
     if (!session?.user?.id) {
+      console.error('[Messages API] Unauthorized - no session or user ID')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
