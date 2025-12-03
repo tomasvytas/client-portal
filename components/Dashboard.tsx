@@ -57,7 +57,7 @@ export default function Dashboard() {
   const [productWebsite, setProductWebsite] = useState('')
   const [productName, setProductName] = useState('')
   const [addingProduct, setAddingProduct] = useState(false)
-  const [activeTab, setActiveTab] = useState<'tasks' | 'settings'>('tasks')
+  const [activeTab, setActiveTab] = useState<'tasks' | 'settings' | 'statistics'>('tasks')
 
   useEffect(() => {
     checkAdminStatus()
@@ -360,6 +360,17 @@ export default function Dashboard() {
               Tasks
             </button>
             <button
+              onClick={() => setActiveTab('statistics')}
+              className={`${
+                activeTab === 'statistics'
+                  ? 'border-[#007AFF] text-[#007AFF]'
+                  : 'border-transparent text-[#8E8E93] hover:text-[#FFFFFF] hover:border-[#38383A]'
+              } flex items-center gap-2 sm:gap-2.5 whitespace-nowrap py-4 px-1 border-b-2 font-semibold text-[14px] sm:text-[15px] transition-colors`}
+            >
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+              Statistics
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`${
                 activeTab === 'settings'
@@ -375,8 +386,8 @@ export default function Dashboard() {
 
         {activeTab === 'settings' ? (
           <ClientSettings />
-        ) : (
-          <>
+        ) : activeTab === 'statistics' ? (
+          <div>
             {/* Statistics Cards */}
             {!loadingStats && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8">
@@ -400,6 +411,9 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+          </div>
+        ) : (
+          <>
 
             {/* Onboarding Prompts */}
             {!loadingStats && (
