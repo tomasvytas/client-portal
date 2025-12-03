@@ -68,12 +68,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async session({ session, token }) {
-      // Always ensure user.id is set from token.sub
+      // Ensure session.user exists
+      if (!session.user) {
+        session.user = {} as any
+      }
+      
+      // Always set user.id from token.sub (required for authentication)
       if (token.sub) {
-        if (!session.user) {
-          session.user = {} as any
-        }
         session.user.id = token.sub
+      } else {
+        console.error('[Auth] Session callback: token.sub is missing!', {
+          hasToken: !!token,
+          tokenKeys: Object.keys(token || {}),
+        })
+      }
+      
+      // Preserve email and name from token if available
+      if (token.email) {
+        session.user.email = token.email as string
+      }
+      if (token.name) {
+        session.user.name = token.name as string
       }
       
       // Debug logging
@@ -91,10 +106,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, account }) {
       if (user) {
         token.sub = user.id
+        // Also store user info in token for session callback
+        token.email = user.email
+        token.name = user.name
       }
-      // Ensure token.sub is always set (fallback to existing sub if user not provided)
-      if (!token.sub && token.sub === undefined) {
-        console.warn('[Auth] JWT callback: token.sub is not set, user might not be authenticated')
+      // Log warning if token.sub is missing (shouldn't happen if user is provided)
+      if (!token.sub) {
+        console.warn('[Auth] JWT callback: token.sub is not set', {
+          hasUser: !!user,
+          userId: user?.id,
+          tokenSub: token.sub,
+        })
       }
       return token
     },
