@@ -11,16 +11,28 @@ export async function GET(
 ) {
   try {
     const session = await auth()
+    console.log('[Messages API GET] Session check:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email,
+    })
+    
     if (!session?.user?.id) {
+      console.error('[Messages API GET] Unauthorized - no session or user ID')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { taskId } = await params
+    console.log('[Messages API GET] Checking access for task:', taskId, 'user:', session.user.id)
 
     // Check if user can access this task
     const canAccess = await canUserAccessTask(session.user.id, taskId)
+    console.log('[Messages API GET] Access check result:', canAccess)
+    
     if (!canAccess) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+      console.error('[Messages API GET] Access denied for task:', taskId, 'user:', session.user.id)
+      return NextResponse.json({ error: 'Task not found or access denied' }, { status: 404 })
     }
 
     const task = await prisma.task.findUnique({

@@ -71,6 +71,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         // For credentials provider, user might not be available, use token
         session.user.id = token.sub as string
+        // Debug logging in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Auth] Session callback:', {
+            hasUser: !!session.user,
+            userId: session.user.id,
+            tokenSub: token.sub,
+            userEmail: session.user.email,
+          })
+        }
       }
       return session
     },
