@@ -344,18 +344,24 @@ export async function POST(request: NextRequest) {
 
           productCreated = true
 
-          // Trigger analysis in background (don't wait for it)
-          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-          fetch(`${baseUrl}/api/products/analyze`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              productId: product.id,
-              websiteUrl,
-            }),
-          }).catch(err => {
-            console.error('Error triggering product analysis:', err)
-            // Don't fail registration if analysis fails
+          // Trigger analysis in background using direct function call (no auth needed)
+          // Import analyzeProduct function directly to avoid 401 errors
+          const { analyzeProduct } = await import('@/app/api/products/analyze/route')
+          
+          // Update status to analyzing
+          await prisma.product.update({
+            where: { id: product.id },
+            data: { status: 'analyzing' },
+          })
+
+          // Start analysis in background (don't wait for it)
+          analyzeProduct(product.id, websiteUrl, productName.trim()).catch((error) => {
+            console.error('Error analyzing product during signup:', error)
+            // Update product status to failed if analysis fails
+            prisma.product.update({
+              where: { id: product.id },
+              data: { status: 'failed' },
+            }).catch(console.error)
           })
         } catch (error: any) {
           console.error('Error creating product during signup:', error)

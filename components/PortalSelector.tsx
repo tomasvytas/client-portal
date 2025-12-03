@@ -122,58 +122,14 @@ export default function PortalSelector() {
   const currentPortalData = portals.find(p => p.id === currentPortal)
   const CurrentIcon = currentPortalData?.icon
 
+  // Just display the portal name, no dropdown
   return (
-    <div className="relative">
-      <button
-        onClick={() => setShowSelector(!showSelector)}
-        className="flex items-center gap-2 px-4 py-2 bg-[#2C2C2E] hover:bg-[#38383A] rounded-xl text-[14px] font-semibold text-[#FFFFFF] transition-colors"
-      >
-        {CurrentIcon && <CurrentIcon className="w-4 h-4" />}
-        <span className="hidden sm:inline">
-          {currentPortalData?.name || 'Select Portal'}
-        </span>
-        <span className="sm:hidden">Portal</span>
-      </button>
-
-      {showSelector && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowSelector(false)}
-          />
-          <div className="absolute right-0 top-full mt-2 z-50 bg-[#1C1C1E] border border-[#38383A] rounded-2xl p-2 shadow-xl min-w-[280px]">
-            <div className="text-[13px] font-semibold text-[#8E8E93] px-3 py-2 mb-1">
-              Switch Portal
-            </div>
-            {portals.map((portal) => {
-              const Icon = portal.icon
-              const isActive = currentPortal === portal.id
-              return (
-                <button
-                  key={portal.id}
-                  onClick={() => handlePortalSwitch(portal)}
-                  className={`w-full flex items-start gap-3 px-3 py-3 rounded-xl transition-colors text-left ${
-                    isActive
-                      ? 'bg-[#007AFF]/20 text-[#007AFF]'
-                      : 'hover:bg-[#2C2C2E] text-[#FFFFFF]'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <div className="text-[15px] font-semibold">{portal.name}</div>
-                      {isActive && <Check className="w-4 h-4 flex-shrink-0" />}
-                    </div>
-                    <div className="text-[13px] text-[#8E8E93] mt-0.5">
-                      {portal.description}
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </>
-      )}
+    <div className="flex items-center gap-2 px-4 py-2 text-[14px] font-semibold text-[#FFFFFF]">
+      {CurrentIcon && <CurrentIcon className="w-4 h-4" />}
+      <span className="hidden sm:inline">
+        {currentPortalData?.name || 'Portal'}
+      </span>
+      <span className="sm:hidden">Portal</span>
     </div>
   )
 }

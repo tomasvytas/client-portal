@@ -322,14 +322,16 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <Image
-                src="/Logo.svg"
-                alt="Task Chat"
-                width={120}
-                height={40}
-                className="object-contain w-24 sm:w-[120px]"
-                priority
-              />
+              <a href="/" className="cursor-pointer">
+                <Image
+                  src="/Logo.svg"
+                  alt="Task Chat"
+                  width={120}
+                  height={40}
+                  className="object-contain w-24 sm:w-[120px]"
+                  priority
+                />
+              </a>
             </div>
             <div className="flex items-center gap-3 sm:gap-5">
               <PortalSelector />

@@ -64,14 +64,16 @@ export default function LandingPage() {
       <nav className="bg-[#1C1C1E]/80 backdrop-blur-xl border-b border-[#38383A]/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Image
-              src="/Logo.svg"
-              alt="Task Chat"
-              width={120}
-              height={40}
-              className="h-8 w-auto"
-              priority
-            />
+            <a href="/" className="cursor-pointer">
+              <Image
+                src="/Logo.svg"
+                alt="Task Chat"
+                width={120}
+                height={40}
+                className="h-8 w-auto"
+                priority
+              />
+            </a>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/auth/signin')}
@@ -290,13 +292,15 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <Image
-                src="/Logo.svg"
-                alt="Task Chat"
-                width={100}
-                height={33}
-                className="h-8 w-auto opacity-60"
-              />
+              <a href="/" className="cursor-pointer">
+                <Image
+                  src="/Logo.svg"
+                  alt="Task Chat"
+                  width={100}
+                  height={33}
+                  className="h-8 w-auto opacity-60"
+                />
+              </a>
               <span className="text-[13px] text-[#8E8E93]">
                 © 2024 Task Chat. All rights reserved.
               </span>
