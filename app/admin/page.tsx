@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { isAdmin } from '@/lib/admin'
+import { isAdmin, isServiceProvider } from '@/lib/admin'
 import AdminDashboard from '@/components/AdminDashboard'
 
 export default async function AdminPage() {
@@ -10,8 +10,12 @@ export default async function AdminPage() {
     redirect('/auth/signin')
   }
 
+  // Allow both service providers and admins to access this page
+  // Service providers see their dashboard, admins see admin features
   const admin = await isAdmin()
-  if (!admin) {
+  const serviceProvider = await isServiceProvider()
+  
+  if (!admin && !serviceProvider) {
     redirect('/')
   }
 

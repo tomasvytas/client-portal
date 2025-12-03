@@ -25,18 +25,21 @@ export default function AdminDashboard() {
   const [migrating, setMigrating] = useState(false)
   const [migrationResult, setMigrationResult] = useState<{ success: boolean; message: string } | null>(null)
   const [isMasterAdmin, setIsMasterAdmin] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [organization, setOrganization] = useState<{ inviteCode: string; inviteLink: string; name: string } | null>(null)
   const [copiedInvite, setCopiedInvite] = useState<string | null>(null)
   const [userInfo, setUserInfo] = useState<any>(null)
   const [loadingUserInfo, setLoadingUserInfo] = useState(false)
 
-  // Check if user is master admin and fetch organization
+  // Check if user is master admin/admin and fetch organization
   useEffect(() => {
     fetch('/api/admin/check')
       .then(res => res.json())
       .then(data => {
         const masterAdmin = data.isMasterAdmin || false
+        const admin = data.isAdmin || false
         setIsMasterAdmin(masterAdmin)
+        setIsAdmin(admin)
         
         // If user tries to access master tab but is not master admin, redirect to board
         const tabParam = searchParams.get('tab')
@@ -47,7 +50,10 @@ export default function AdminDashboard() {
           setActiveTab('master')
         }
       })
-      .catch(() => setIsMasterAdmin(false))
+      .catch(() => {
+        setIsMasterAdmin(false)
+        setIsAdmin(false)
+      })
 
     // Fetch organization info for invite code (even if admin, they might also be a service provider)
     fetch('/api/admin/organization')
@@ -540,7 +546,8 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* Admin Access Setup / Unauthorize */}
+            {/* Admin Access Setup / Unauthorize - Only show to actual admins, not service providers */}
+            {(isAdmin || isMasterAdmin) && (
             <div className="pt-8 border-t border-[#38383A]/30 mb-8">
               {!isMasterAdmin ? (
                 <>

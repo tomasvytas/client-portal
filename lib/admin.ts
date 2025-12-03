@@ -12,8 +12,8 @@ export async function isAdmin(): Promise<boolean> {
     select: { role: true, isMasterAdmin: true },
   })
 
-  // Service providers and master admins have admin access
-  return user?.role === 'service_provider' || user?.isMasterAdmin === true || user?.role === 'admin'
+  // Only actual admins and master admins have admin access (NOT service providers)
+  return user?.isMasterAdmin === true || user?.role === 'admin'
 }
 
 export async function isMasterAdmin(): Promise<boolean> {
