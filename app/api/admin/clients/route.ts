@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { requireAdmin } from '@/lib/admin'
+import { requireAdminOrServiceProvider } from '@/lib/admin'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin()
+    const { isAdmin, isServiceProvider } = await requireAdminOrServiceProvider()
 
     const session = await auth()
     if (!session?.user?.id) {
