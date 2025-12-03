@@ -131,19 +131,37 @@ export async function analyzeProduct(
   websiteUrl: string,
   productName?: string
 ) {
+  console.log(`[AnalyzeProduct] Starting analysis for product ${productId}`)
+  console.log(`[AnalyzeProduct] Website URL: ${websiteUrl}`)
+  console.log(`[AnalyzeProduct] Product Name: ${productName || 'N/A'}`)
+  
   try {
     // For now, we'll use a simplified version that analyzes the website
     // In production, you might want to use Firecrawl API or similar
     
     // Fetch website content (simplified - in production use Firecrawl)
     let websiteContent = ''
+    console.log(`[AnalyzeProduct] Fetching website content...`)
     try {
+      const fetchTimeout = 10000 // 10 seconds timeout for website fetch
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), fetchTimeout)
+      
       const response = await fetch(websiteUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; BrandAnalyzer/1.0)',
         },
+        signal: controller.signal,
       })
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
       const html = await response.text()
+      console.log(`[AnalyzeProduct] Website fetched, HTML length: ${html.length}`)
+      
       // Extract text content (simplified - in production use proper HTML parsing)
       websiteContent = html
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -151,16 +169,20 @@ export async function analyzeProduct(
         .replace(/<[^>]+>/g, ' ')
         .replace(/\s+/g, ' ')
         .substring(0, 10000) // Limit content length
-    } catch (error) {
-      console.error('Error fetching website:', error)
-      websiteContent = `Website URL: ${websiteUrl}\n\nUnable to fetch full content. Please provide more details about the product.`
+      
+      console.log(`[AnalyzeProduct] Extracted content length: ${websiteContent.length}`)
+    } catch (error: any) {
+      console.error(`[AnalyzeProduct] Error fetching website:`, error?.message || error)
+      websiteContent = `Website URL: ${websiteUrl}\n\nUnable to fetch full content: ${error?.message || 'Unknown error'}. Please provide more details about the product.`
     }
 
     // Generate brand guidelines using Gemini (same prompt as n8n workflow)
+    console.log(`[AnalyzeProduct] Initializing Gemini API...`)
     const gemini = getGemini()
     // Use gemini-2.5-flash for fast, cost-effective analysis
     // Alternative: gemini-2.5-pro for better quality, gemini-3-pro-preview for best quality
     const model = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    console.log(`[AnalyzeProduct] Gemini model initialized`)
 
     const prompt = `# ROLE AND GOAL
 You are an expert Brand Strategist and Marketing Analyst. Your task is to analyze the provided scraped website content from a company or product and synthesize it into a comprehensive Brand Guidelines document. This document's primary purpose is to serve as the foundational context for an AI-powered advertising system. Therefore, your analysis must be sharp, marketing-focused, and extract actionable insights for creating compelling, on-brand ad copy.
@@ -221,28 +243,42 @@ Here is the scraped website content. Analyze it and generate the brand guideline
 
 ${websiteContent}`
 
-    console.log('Starting Gemini analysis for product:', productId)
-    console.log('Website URL:', websiteUrl)
-    console.log('Content length:', websiteContent.length)
+    console.log(`[AnalyzeProduct] Starting Gemini API call...`)
+    console.log(`[AnalyzeProduct] Prompt length: ${prompt.length}`)
     
-    // Add timeout for Gemini API call (60 seconds max)
+    // Add timeout for Gemini API call (45 seconds max - Vercel has 60s limit for serverless)
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Gemini API call timed out after 60 seconds')), 60000)
+      setTimeout(() => reject(new Error('Gemini API call timed out after 45 seconds')), 45000)
     })
     
-    const geminiPromise = model.generateContent(prompt)
-    const result = await Promise.race([geminiPromise, timeoutPromise]) as any
+    let result: any
+    try {
+      const geminiPromise = model.generateContent(prompt)
+      result = await Promise.race([geminiPromise, timeoutPromise])
+      console.log(`[AnalyzeProduct] Gemini API call completed`)
+    } catch (apiError: any) {
+      console.error(`[AnalyzeProduct] Gemini API error:`, apiError?.message || apiError)
+      throw new Error(`Gemini API failed: ${apiError?.message || 'Unknown error'}`)
+    }
     
     if (!result || !result.response) {
-      throw new Error('Invalid response from Gemini API')
+      console.error(`[AnalyzeProduct] Invalid result structure:`, result)
+      throw new Error('Invalid response from Gemini API - missing response')
     }
     
     const response = result.response
-    const brandGuidelines = response.text()
-    console.log('Gemini analysis completed, length:', brandGuidelines.length)
+    let brandGuidelines: string
+    try {
+      brandGuidelines = response.text()
+      console.log(`[AnalyzeProduct] Gemini analysis completed, length: ${brandGuidelines.length}`)
+    } catch (textError: any) {
+      console.error(`[AnalyzeProduct] Error extracting text from response:`, textError)
+      throw new Error(`Failed to extract text from Gemini response: ${textError?.message || 'Unknown error'}`)
+    }
     
     if (!brandGuidelines || brandGuidelines.length < 100) {
-      throw new Error('Gemini API returned insufficient content')
+      console.error(`[AnalyzeProduct] Insufficient content: length=${brandGuidelines?.length || 0}`)
+      throw new Error(`Gemini API returned insufficient content (${brandGuidelines?.length || 0} chars, expected at least 100)`)
     }
 
     // Extract product type from the analysis (try to infer from content)
@@ -260,37 +296,56 @@ ${websiteContent}`
     }
 
     // Update product with analysis results
-    await prisma.product.update({
-      where: { id: productId },
-      data: {
-        status: 'completed',
-        brandGuidelines,
-        productType,
-        analysisData,
-      },
-    })
+    console.log(`[AnalyzeProduct] Updating product ${productId} with results...`)
+    try {
+      await prisma.product.update({
+        where: { id: productId },
+        data: {
+          status: 'completed',
+          brandGuidelines,
+          productType,
+          analysisData,
+        },
+      })
+      console.log(`[AnalyzeProduct] Product ${productId} updated successfully - STATUS: completed`)
+    } catch (updateError: any) {
+      console.error(`[AnalyzeProduct] Error updating product:`, updateError?.message || updateError)
+      throw new Error(`Failed to update product: ${updateError?.message || 'Unknown error'}`)
+    }
 
-    console.log('Product analysis completed:', productId)
+    console.log(`[AnalyzeProduct] Analysis completed successfully for product ${productId}`)
   } catch (error: any) {
-    console.error('Error in product analysis:', error)
-    console.error('Error details:', {
-      message: error?.message,
-      stack: error?.stack,
+    console.error(`[AnalyzeProduct] ERROR in product analysis for ${productId}:`, error)
+    console.error(`[AnalyzeProduct] Error message:`, error?.message)
+    console.error(`[AnalyzeProduct] Error stack:`, error?.stack)
+    console.error(`[AnalyzeProduct] Error details:`, {
       productId,
       websiteUrl,
+      productName,
+      errorType: error?.constructor?.name,
+      errorCode: error?.code,
     })
     
     // Update product status to failed with error details
-    await prisma.product.update({
-      where: { id: productId },
-      data: { 
-        status: 'failed',
-        analysisData: {
-          error: error?.message || 'Unknown error occurred',
-          timestamp: new Date().toISOString(),
+    try {
+      await prisma.product.update({
+        where: { id: productId },
+        data: { 
+          status: 'failed',
+          analysisData: {
+            error: error?.message || 'Unknown error occurred',
+            errorType: error?.constructor?.name || 'Error',
+            timestamp: new Date().toISOString(),
+          },
         },
-      },
-    })
+      })
+      console.log(`[AnalyzeProduct] Product ${productId} marked as failed`)
+    } catch (updateError: any) {
+      console.error(`[AnalyzeProduct] CRITICAL: Failed to update product status to failed:`, updateError)
+      // Don't throw here - we want to log the original error
+    }
+    
+    // Re-throw so caller knows it failed
     throw error
   }
 }
